@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-cream text-charcoal font-sans antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display text-saddle-dark;
+  }
+  /* Visible keyboard focus everywhere (WCAG 2.2 AA). */
+  :focus-visible {
+    @apply outline-none ring-2 ring-barn ring-offset-2 ring-offset-cream;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  }
+}
+
+@layer components {
+  /* Reusable component classes built from design tokens. */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-5 min-h-[44px]
+           font-sans font-bold text-base transition-colors duration-150
+           focus-visible:ring-2 focus-visible:ring-barn focus-visible:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary  { @apply btn bg-barn text-cream-100 hover:bg-barn-dark; }
+  .btn-secondary{ @apply btn bg-transparent text-saddle border-2 border-saddle hover:bg-saddle hover:text-cream-100; }
+  .btn-hay      { @apply btn bg-hay text-charcoal hover:bg-hay-dark; }
+  .btn-ghost    { @apply btn bg-transparent text-saddle hover:bg-cream-200; }
+
+  .card {
+    @apply bg-cream-100 border border-line rounded-lg shadow-card p-6;
+  }
+  .input {
+    @apply w-full rounded-md border border-line bg-white px-4 py-2.5 text-charcoal
+           placeholder:text-charcoal-muted/70
+           focus:border-barn focus:ring-2 focus:ring-barn/30 focus:outline-none;
+  }
+  .label {
+    @apply block text-sm font-bold text-saddle mb-1.5;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold;
+  }
+  .badge-service { @apply badge bg-hay/20 text-saddle-dark; }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-cream-100
+           px-3 py-1.5 text-sm font-semibold text-saddle;
+  }
+  .container-rh { @apply mx-auto w-full max-w-6xl px-4 sm:px-6; }
+}
+
+/* Denim twill: layer a woven-fabric texture over every solid denim fill
+   (bg-barn) — fine diagonal light/shadow threads + a soft depth gradient.
+   Semi-transparent overlays let the barn base color (and its hover:barn-dark
+   variant) show through, so buttons, badges, etc. get the weave for free. */
+.bg-barn {
+  background-image:
+    /* dominant twill ribbing — bright warp threads running lower-left → upper-right */
+    repeating-linear-gradient(45deg,
+      rgba(255, 255, 255, 0.06) 0, rgba(255, 255, 255, 0.06) 1px,
+      transparent 1px, transparent 3px),
+    /* shadow threads interlaced with the highlights for weave depth */
+    repeating-linear-gradient(45deg,
+      rgba(0, 0, 0, 0.14) 0, rgba(0, 0, 0, 0.14) 1px,
+      transparent 1px, transparent 4px),
+    /* fainter cross weft threads for a real fabric grid */
+    repeating-linear-gradient(-45deg,
+      rgba(255, 255, 255, 0.035) 0, rgba(255, 255, 255, 0.035) 1px,
+      transparent 1px, transparent 6px),
+    /* subtle sheen so the fabric reads as dimensional, not flat */
+    linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.07));
+}

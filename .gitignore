@@ -1,0 +1,20 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+server/ranchhand.db
+server/ranchhand.db-*
+.env
+.env.local
+# Google service-account keys — never commit credentials.
+*service-account*.json
+gcp-*.json
+credentials.json
+
+# OS / editor cruft
+._*
+Thumbs.db
+
+# WordPress local-dev artifacts (the theme itself IS committed under wordpress/)
+wp-config.php
+wp-content/uploads/

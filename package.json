@@ -1,0 +1,19 @@
+{
+  "name": "the-ranch-hand",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The Ranch Hand — a two-sided marketplace connecting horse & farm-animal owners with experienced sitters.",
+  "scripts": {
+    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
+    "seed": "npm --prefix server run seed",
+    "dev": "concurrently -n server,client -c magenta,cyan \"npm --prefix server run dev\" \"npm --prefix client run build -- --watch\"",
+    "dev:vite": "concurrently -n server,client -c magenta,cyan \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "build": "npm --prefix client run build",
+    "setup": "npm run install:all && npm run seed"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

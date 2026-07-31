@@ -1,0 +1,22 @@
+{
+  "name": "ranch-hand-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "Express + SQLite REST API for The Ranch Hand.",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "seed": "node src/seed.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.7.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.21.2",
+    "googleapis": "^173.0.0",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
