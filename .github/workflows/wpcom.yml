@@ -1,0 +1,35 @@
+name: Deploy to WordPress.com
+
+# Advanced GitHub Deployment for WordPress.com.
+# This repo is a monorepo — the theme lives at wordpress/themes/the-ranch-hand,
+# but WordPress.com needs the theme's files (style.css, functions.php, …) at the
+# ROOT of the deployment artifact. So we stage just that folder and upload it as
+# the artifact named "wpcom" (the name WordPress.com looks for).
+#
+# In the WordPress.com deployment settings, set the Destination directory to:
+#   /wp-content/themes/the-ranch-hand
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build theme artifact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Stage the theme as the deployment root
+        run: |
+          mkdir -p dist
+          cp -R "wordpress/themes/the-ranch-hand/." dist/
+
+      - name: Upload deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wpcom
+          path: dist
+          retention-days: 1
