@@ -289,9 +289,9 @@ html, body { overflow-x: clip; }
   /* Comfortable, consistent vertical rhythm, smaller than the desktop 4rem. */
   .section { padding: 2.75rem 0; }
 
-  /* Hero: extra bottom room so the search form clears the section below it,
-     and a hair less up top. */
-  .hero-inner { padding: 3rem 0 4rem; }
+  /* Hero: clear breathing room between the header and the eyebrow badge (top)
+     and between the search form and the section below it (bottom). */
+  .hero-inner { padding: 4.25rem 0 5rem; }
 
   /* Eyebrow badge: wrap to two lines instead of being clipped off the right
      edge on narrow screens (the long "…done right" text was overflowing). */
