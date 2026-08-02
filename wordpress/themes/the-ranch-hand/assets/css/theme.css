@@ -67,12 +67,12 @@ ul { margin: 0; }
 .mt-6 { margin-top: 1.5rem; } .mt-8 { margin-top: 2rem; } .mt-10 { margin-top: 2.5rem; }
 .measure { max-width: 40rem; margin-left: auto; margin-right: auto; }
 
-/* Typographic scale */
-.display-xl { font-family: var(--font-display); font-weight: 700; font-size: 2.5rem; line-height: 1.1; }
-.display-lg { font-family: var(--font-display); font-weight: 700; font-size: 1.875rem; line-height: 1.15; }
-.display-md { font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; }
-@media (min-width: 640px) { .display-xl { font-size: 3.25rem; } }
-.lead { font-size: 1.125rem; line-height: 1.7; }
+/* Typographic scale — fluid via clamp() so headings scale down cleanly on
+   phones instead of wrapping into a cramped, "compressed" block. */
+.display-xl { font-family: var(--font-display); font-weight: 700; font-size: clamp(2.05rem, 1.2rem + 4vw, 3.25rem); line-height: 1.12; }
+.display-lg { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.55rem, 1rem + 2.6vw, 1.875rem); line-height: 1.18; }
+.display-md { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.3rem, 1.05rem + 1.4vw, 1.5rem); }
+.lead { font-size: clamp(1rem, 0.95rem + 0.5vw, 1.125rem); line-height: 1.7; }
 .muted { color: var(--charcoal-muted); }
 
 /* --- Buttons -------------------------------------------------------------- */
@@ -273,3 +273,57 @@ ul { margin: 0; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 .hidden { display: none; }
 .flex-between { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+
+/* ==========================================================================
+   Mobile refinements (≤ 640px)
+   Everything above is desktop-first; this block tightens the phone layout so
+   sections breathe, headings scale, and nothing overflows the viewport.
+   ========================================================================== */
+
+/* Global safety net: never let a stray wide element force sideways scroll. */
+html, body { overflow-x: hidden; }
+
+@media (max-width: 639px) {
+  /* Comfortable, consistent vertical rhythm — smaller than the desktop 4rem. */
+  .section { padding: 2.75rem 0; }
+  .hero-inner { padding: 3.25rem 0; }
+
+  /* A touch more side gutter so text isn't jammed against the screen edge. */
+  .container-rh { padding: 0 1.125rem; }
+
+  /* Header/nav should not be squished by the brand sub-label. */
+  .brand img { height: 2rem; }
+  .brand-name { font-size: 1.125rem; }
+
+  /* Section headers with a trailing "View all →" link must stack, otherwise
+     the heading gets crushed into a narrow, wrapping column. */
+  .flex-between { flex-direction: column; align-items: flex-start; gap: .5rem; }
+
+  /* Search bar: fields stack full-width and the submit button spans the row
+     instead of floating, cramped, to the right. */
+  .searchbar { flex-direction: column; gap: 1rem; padding: 1rem; }
+  .searchbar .field { flex: 1 1 auto; width: 100%; }
+  .searchbar .btn { width: 100%; align-self: stretch; }
+
+  /* Animal tiles sit two-up; trim the padding so the blurb has room to read. */
+  .grid-6 { gap: .75rem; }
+  .animal-tile { padding: 1rem .75rem; }
+  .animal-tile .emoji { font-size: 2rem; }
+
+  /* Slightly tighter card padding reclaims horizontal space on narrow screens. */
+  .card { padding: 1.25rem; }
+
+  /* CTA panel: reduce the generous desktop insets. */
+  .bg-barn[style] { padding: 2.25rem 1.5rem !important; }
+
+  /* Directory/profile: drop the sticky offset that wastes space when stacked. */
+  .filters { position: static; top: auto; }
+
+  /* Ensure long words / URLs in body copy wrap instead of overflowing. */
+  p, blockquote, .lead, h1, h2, h3 { overflow-wrap: break-word; }
+}
+
+/* Very small phones (≤ 380px): keep two-column tiles from getting too tight. */
+@media (max-width: 380px) {
+  .grid-6 { grid-template-columns: 1fr; }
+}
