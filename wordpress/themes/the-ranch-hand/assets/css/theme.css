@@ -280,13 +280,25 @@ ul { margin: 0; }
    sections breathe, headings scale, and nothing overflows the viewport.
    ========================================================================== */
 
-/* Global safety net: never let a stray wide element force sideways scroll. */
-html, body { overflow-x: hidden; }
+/* Global safety net: never let a stray wide element force sideways scroll.
+   `clip` (not `hidden`) avoids turning the body into a scroll container, which
+   would otherwise interfere with the sticky header. */
+html, body { overflow-x: clip; }
 
 @media (max-width: 639px) {
   /* Comfortable, consistent vertical rhythm, smaller than the desktop 4rem. */
   .section { padding: 2.75rem 0; }
-  .hero-inner { padding: 3.25rem 0; }
+
+  /* Hero: extra bottom room so the search form clears the section below it,
+     and a hair less up top. */
+  .hero-inner { padding: 3rem 0 4rem; }
+
+  /* Eyebrow badge: wrap to two lines instead of being clipped off the right
+     edge on narrow screens (the long "…done right" text was overflowing). */
+  .hero .badge { max-width: 100%; white-space: normal; line-height: 1.35; text-align: left; }
+
+  /* Give the search form clear separation from the hero copy above it. */
+  .searchbar { margin-top: 1.75rem; }
 
   /* A touch more side gutter so text isn't jammed against the screen edge. */
   .container-rh { padding: 0 1.125rem; }
