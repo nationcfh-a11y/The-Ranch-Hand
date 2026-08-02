@@ -51,7 +51,7 @@ export default function Footer() {
       </div>
       <div className="border-t border-cream/15">
         <div className="container-rh flex flex-col items-center justify-between gap-2 py-5 text-xs text-cream/65 sm:flex-row">
-          <p>© {new Date().getFullYear()} The Ranch Hand. A demo marketplace — bookings & payments are simulated.</p>
+          <p>© {new Date().getFullYear()} The Ranch Hand. A demo marketplace. Bookings & payments are simulated.</p>
           <p>Built locally · No real charges are ever made.</p>
         </div>
       </div>

@@ -31,7 +31,7 @@ export const ANIMAL_BLURBS = {
   'Goats/Sheep': 'Small ruminants, milking, kidding & lambing.',
   Pigs: 'Pot-bellies to pasture pigs, feeding & wallows.',
   Poultry: 'Chickens, ducks & turkeys; eggs & coop care.',
-  'Mixed Farm': 'A little of everything — whole-farm sitting.',
+  'Mixed Farm': 'A little of everything, whole-farm sitting.',
 };
 
 export const FEES = { caretaker_commission: 0.15, owner_service_fee: 0.07 };

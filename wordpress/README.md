@@ -1,10 +1,10 @@
-# The Ranch Hand — WordPress theme
+# The Ranch Hand: WordPress theme
 
 This folder holds the **WordPress version** of The Ranch Hand: a custom theme
 (`themes/the-ranch-hand`) that recreates the "Rustic Barn" design as a real
 WordPress site you can run on your **WordPress.com Business** plan.
 
-It is a marketing + **caretaker directory** site with lead capture — the
+It is a marketing + **caretaker directory** site with lead capture, the
 faithful front end of the marketplace. The live booking/login engine (the
 Node/React app in `../client` and `../server`) is **phase 2**.
 
@@ -17,19 +17,19 @@ Node/React app in `../client` and `../server`) is **phase 2**.
 
 ## What you get on day one
 
-- **Homepage** — hero + search, value props, how-it-works, featured sitters,
+- **Homepage:** hero + search, value props, how-it-works, featured sitters,
   animal categories, services, testimonials, CTA (ports `Home.jsx`).
-- **Find a Sitter** — a browsable, filterable caretaker **directory**
+- **Find a Sitter:** a browsable, filterable caretaker **directory**
   (`/sitters/`) with animal / service / search / sort filters.
-- **Caretaker profiles** — bio, experience, animals, services & rates,
+- **Caretaker profiles:** bio, experience, animals, services & rates,
   availability, reviews summary, and a **booking-request form**.
-- **Become a Caretaker** — recruiting landing + **application form**.
+- **Become a Caretaker:** recruiting landing + **application form**.
 - **12 sample caretakers** auto-loaded on activation (edit/replace them under
   **Caretakers** in wp-admin).
-- **Leads** — every booking request and application is saved under
+- **Leads:** every booking request and application is saved under
   **wp-admin → Leads** *and* emailed to your admin address.
 - Exact "Rustic Barn" look: denim-blue `#2E4B7C`, hay gold, saddle brown,
-  cream, Bitter + Nunito Sans fonts. No build step — plain CSS.
+  cream, Bitter + Nunito Sans fonts. No build step, plain CSS.
 
 ---
 
@@ -39,7 +39,7 @@ WordPress.com Business can pull a theme straight from this GitHub repo.
 
 ### 1. Push this repo to GitHub (one time)
 
-From the repo root — see the root `README.md` "Push to GitHub" section. The
+From the repo root, see the root `README.md` "Push to GitHub" section. The
 theme lives at `wordpress/themes/the-ranch-hand`.
 
 ### 2. Connect the repo in WordPress.com
@@ -52,7 +52,7 @@ theme lives at `wordpress/themes/the-ranch-hand`.
 4. Click **Create deployment / Add repository** and choose:
    - **Repository:** `nationcfh-a11y/The-Ranch-Hand`
    - **Branch:** `main`
-   - **Deployment type:** *Simple* (no build step — this theme needs none)
+   - **Deployment type:** *Simple* (no build step, this theme needs none)
    - **Source / repository directory:** `wordpress/themes/the-ranch-hand`
    - **Destination directory:** `wp-content/themes/the-ranch-hand`
 5. Save and **Deploy**. WordPress.com copies the theme onto your site. Every
@@ -65,9 +65,9 @@ theme lives at `wordpress/themes/the-ranch-hand`.
    sample caretakers.
 2. **Settings → Permalinks → Save Changes** (once) so `/sitters/` and profile
    URLs resolve. *(If "Find a Sitter" 404s, this is always the fix.)*
-3. *(Optional)* **Appearance → Customize → Ranch Hand — Homepage Hero** to
+3. *(Optional)* **Appearance → Customize → Ranch Hand: Homepage Hero** to
    edit the hero headline, subheading, and background image.
-4. *(Optional)* **Appearance → Menus** — create a menu, assign it to
+4. *(Optional)* **Appearance → Menus**: create a menu, assign it to
    *Primary Navigation*. Without one, the theme shows sensible default links.
 5. Replace the sample sitters under **Caretakers**, and swap the pravatar demo
    photos for real featured images.
@@ -80,7 +80,7 @@ theme lives at `wordpress/themes/the-ranch-hand`.
 |-------|-------------------|
 | Add / edit a sitter | **Caretakers → Add New** (title = name; the editor = bio; fields for location, rates, rating live in the post meta) |
 | Animal / service tags | **Caretakers → Animals / Services** taxonomies |
-| Hero text & image | **Appearance → Customize → Ranch Hand — Homepage Hero** |
+| Hero text & image | **Appearance → Customize → Ranch Hand: Homepage Hero** |
 | Homepage sections | `front-page.php` (arrays near the top) |
 | Colors / fonts | `assets/css/theme.css` (`:root` tokens at the top) |
 | Booking / application leads | **Leads** |
@@ -102,7 +102,7 @@ You need a local WordPress (e.g. [Local](https://localwp.com) or
 
 ---
 
-## Phase 2 — the live app
+## Phase 2: the live app
 
 The real marketplace (accounts, live booking, messaging, payments) is the
 Node/React app in `../client` + `../server`. When you're ready, host it on a

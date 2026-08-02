@@ -1,6 +1,6 @@
 <?php
 /**
- * Caretaker directory — browse + filter (animal, service, search, sort).
+ * Caretaker directory: browse + filter (animal, service, search, sort).
  * Ports client/src/pages/Search.jsx.
  *
  * @package The_Ranch_Hand
@@ -144,7 +144,7 @@ $sel = function ( $a, $b ) { echo selected( $a, $b, false ); };
 			<?php else : ?>
 				<div class="card text-center">
 					<p style="font-size:1.125rem;font-weight:700;color:var(--saddle-dark);">No sitters match those filters.</p>
-					<p class="muted mt-2">Try widening your search — clear a filter or two.</p>
+					<p class="muted mt-2">Try widening your search. Clear a filter or two.</p>
 					<a class="btn btn-secondary mt-4" href="<?php echo esc_url( $trh_dir ); ?>">Clear filters</a>
 				</div>
 			<?php endif; ?>

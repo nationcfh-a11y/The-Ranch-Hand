@@ -1,7 +1,7 @@
 <?php
 /**
  * Lead capture. Until the real booking engine exists (phase 2), the site
- * collects two kinds of leads — booking requests and caretaker applications —
+ * collects two kinds of leads (booking requests and caretaker applications),
  * stores each as a private "trh_lead" post (so nothing is ever lost) and
  * emails the site admin. Fully self-contained; no third-party form plugin.
  *
@@ -72,7 +72,7 @@ function trh_handle_lead() {
 		}
 	}
 
-	// Notify the admin (fail-soft — a mail error never blocks the thank-you).
+	// Notify the admin (fail-soft; a mail error never blocks the thank-you).
 	$lines = array(
 		'A new ' . ( $is_application ? 'caretaker application' : 'booking request' ) . ' came in from The Ranch Hand:',
 		'',
@@ -113,7 +113,7 @@ function trh_lead_notice() {
 	}
 	$status = sanitize_key( wp_unslash( $_GET['trh_lead'] ) );
 	if ( 'ok' === $status ) {
-		echo '<div class="notice notice-success">Thank you — your request is in! We\'ll be in touch by email shortly.</div>';
+		echo '<div class="notice notice-success">Thank you, your request is in! We\'ll be in touch by email shortly.</div>';
 	} elseif ( 'invalid' === $status ) {
 		echo '<div class="notice notice-error">Please add your name and a valid email so we can reach you.</div>';
 	} elseif ( 'error' === $status ) {

@@ -1,6 +1,6 @@
 // Brand marks. The denim "RH" artwork lives in /public.
-// Sizes are height-driven (h-*) since the artwork is wider than it is tall —
-// width stays auto so the glyph never squashes.
+// Sizes are height-driven (h-*) since the artwork is wider than it is tall.
+// Width stays auto so the glyph never squashes.
 
 // Icon-only "RH" mark.
 export function Mark({ className = 'h-9' }) {

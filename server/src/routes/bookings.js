@@ -15,7 +15,7 @@ function priceFor(caretakerId, serviceKey, quantity) {
   return { rate, base: rate * Math.max(1, Number(quantity) || 1) };
 }
 
-// POST /api/bookings/quote — preview the fee breakdown without saving. (Auth optional.)
+// POST /api/bookings/quote: preview the fee breakdown without saving. (Auth optional.)
 router.post('/quote', (req, res) => {
   const { caretaker_id, service, quantity = 1 } = req.body || {};
   if (!caretaker_id || !service) return res.status(400).json({ error: 'caretaker_id and service are required.' });
@@ -24,7 +24,7 @@ router.post('/quote', (req, res) => {
   res.json({ rate, quantity: Number(quantity) || 1, service_label: SERVICE_LABELS[service] || service, ...computeFees(base) });
 });
 
-// POST /api/bookings — create a booking (simulated payment: status starts "pending").
+// POST /api/bookings: create a booking (simulated payment: status starts "pending").
 router.post('/', authRequired, (req, res) => {
   if (req.user.role !== 'owner') {
     return res.status(403).json({ error: 'Only owner accounts can request bookings.' });
@@ -52,7 +52,7 @@ router.post('/', authRequired, (req, res) => {
   res.status(201).json({ booking: getBooking(info.lastInsertRowid) });
 });
 
-// GET /api/bookings/mine — bookings for the current user (as owner or caretaker).
+// GET /api/bookings/mine: bookings for the current user (as owner or caretaker).
 router.get('/mine', authRequired, (req, res) => {
   const col = req.user.role === 'caretaker' ? 'caretaker_id' : 'owner_id';
   const rows = db
@@ -69,7 +69,7 @@ router.get('/mine', authRequired, (req, res) => {
   res.json({ bookings: rows });
 });
 
-// PATCH /api/bookings/:id/status — caretaker confirms/completes; either party cancels.
+// PATCH /api/bookings/:id/status: caretaker confirms/completes; either party cancels.
 router.patch('/:id/status', authRequired, (req, res) => {
   const { status } = req.body || {};
   const allowed = ['pending', 'confirmed', 'completed', 'cancelled'];

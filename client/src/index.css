@@ -57,12 +57,12 @@
 }
 
 /* Denim twill: layer a woven-fabric texture over every solid denim fill
-   (bg-barn) — fine diagonal light/shadow threads + a soft depth gradient.
+   (bg-barn): fine diagonal light/shadow threads + a soft depth gradient.
    Semi-transparent overlays let the barn base color (and its hover:barn-dark
    variant) show through, so buttons, badges, etc. get the weave for free. */
 .bg-barn {
   background-image:
-    /* dominant twill ribbing — bright warp threads running lower-left → upper-right */
+    /* dominant twill ribbing: bright warp threads running lower-left → upper-right */
     repeating-linear-gradient(45deg,
       rgba(255, 255, 255, 0.06) 0, rgba(255, 255, 255, 0.06) 1px,
       transparent 1px, transparent 3px),

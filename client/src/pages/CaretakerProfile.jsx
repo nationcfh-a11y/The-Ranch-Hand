@@ -107,7 +107,7 @@ export default function CaretakerProfile() {
           <section className="card">
             <h2 className="text-xl font-700">Reviews</h2>
             {reviews.length === 0 ? (
-              <p className="mt-3 text-charcoal-muted">No reviews yet — be the first to book and review!</p>
+              <p className="mt-3 text-charcoal-muted">No reviews yet. Be the first to book and review!</p>
             ) : (
               <ul className="mt-4 space-y-5">
                 {reviews.map((r) => (
@@ -144,9 +144,9 @@ export default function CaretakerProfile() {
           </div>
           <div className="card lg:sticky lg:top-24">
             <p className="text-sm text-charcoal-muted">Starting at</p>
-            <p className="font-display text-3xl font-700 text-saddle-dark">{c.min_price != null ? money(c.min_price) : '—'}</p>
+            <p className="font-display text-3xl font-700 text-saddle-dark">{c.min_price != null ? money(c.min_price) : '-'}</p>
             <BookButton c={c} user={user} navigate={navigate} full />
-            <p className="mt-3 text-center text-xs text-charcoal-muted">You won’t be charged — payments are simulated.</p>
+            <p className="mt-3 text-center text-xs text-charcoal-muted">You won’t be charged. Payments are simulated.</p>
           </div>
         </aside>
       </div>

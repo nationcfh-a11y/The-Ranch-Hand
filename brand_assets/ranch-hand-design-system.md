@@ -5,7 +5,7 @@ description: Implementation-ready design system for The Ranch Hand equine & live
 
 <!-- TYPEUI_SH_MANAGED_START -->
 
-# The Ranch Hand — Design System ("Rustic Barn")
+# The Ranch Hand: Design System ("Rustic Barn")
 
 > This file fills in the concrete brand values that `DESIGN.md` (the authoring blueprint)
 > intentionally left as "Repo-Specific Variables To Replace." It is the practical source of
@@ -14,7 +14,7 @@ description: Implementation-ready design system for The Ranch Hand equine & live
 ## Mission
 A warm, trustworthy two-sided marketplace connecting horse and farm-animal owners with
 experienced sitters. The experience should feel like a well-kept country barn: warm, sturdy,
-honest, and easy to navigate — never slick or corporate.
+honest, and easy to navigate, never slick or corporate.
 
 ## Brand
 - Product/brand: The Ranch Hand
@@ -45,12 +45,12 @@ calls to action, hay-gold highlights, and saddle-brown structure.
 | `line`           | #E4D9C3  | Hairline borders on cream |
 
 Contrast: barn (#A8352A) on cream and on white passes AA for large text and UI; white text on
-barn passes AA. charcoal on cream ≥ 7:1. Never place hay text on cream (fails) — hay is for
+barn passes AA. charcoal on cream ≥ 7:1. Never place hay text on cream (fails). Hay is for
 fills, icons ≥24px, and large display only.
 
 ### Typography
-- Display / headings: **"Bitter"** (slab serif) — weights 600/700. Warm, sturdy, editorial.
-- Body / UI: **"Nunito Sans"** — weights 400/600/700. Friendly, highly legible.
+- Display / headings: **"Bitter"** (slab serif), weights 600/700. Warm, sturdy, editorial.
+- Body / UI: **"Nunito Sans"**, weights 400/600/700. Friendly, highly legible.
 - Scale (rem): xs .75 / sm .875 / base 1 / lg 1.125 / xl 1.25 / 2xl 1.5 / 3xl 1.875 / 4xl 2.5 / 5xl 3.25
 - Headings use `font-display`; body uses `font-sans`. Line-height: 1.2 headings, 1.6 body.
 

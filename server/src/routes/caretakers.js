@@ -7,7 +7,7 @@ const { caretaker, reviewWithAuthor } = require('../serializers');
 const router = express.Router();
 
 // Note: list query includes resume_name (lightweight flag) but NOT resume_data (the
-// large base64 blob) — that's only fetched on the single-profile route.
+// large base64 blob), which is only fetched on the single-profile route.
 const listStmt = db.prepare(
   `SELECT u.*, p.experience_years, p.animal_types, p.services, p.rates, p.availability, p.availability_notes, p.headline, p.resume_name
      FROM users u
@@ -15,7 +15,7 @@ const listStmt = db.prepare(
     WHERE u.role = 'caretaker'`
 );
 
-// GET /api/caretakers — list + filter caretakers.
+// GET /api/caretakers: list + filter caretakers.
 // Query params: animal, service, minPrice, maxPrice, minRating, q (text), sort
 router.get('/', (req, res) => {
   const { animal, service, minPrice, maxPrice, minRating, q, sort } = req.query;
@@ -47,7 +47,7 @@ router.get('/', (req, res) => {
   res.json({ caretakers: list, total: list.length });
 });
 
-// GET /api/caretakers/:id — full profile incl. reviews.
+// GET /api/caretakers/:id: full profile incl. reviews.
 router.get('/:id', (req, res) => {
   const row = db
     .prepare(
@@ -73,7 +73,7 @@ router.get('/:id', (req, res) => {
   res.json({ caretaker: caretaker(row, row), reviews, resume });
 });
 
-// PUT /api/caretakers/me — create/update the logged-in caretaker's profile (onboarding).
+// PUT /api/caretakers/me: create/update the logged-in caretaker's profile (onboarding).
 router.put('/me/profile', authRequired, (req, res) => {
   if (req.user.role !== 'caretaker') {
     return res.status(403).json({ error: 'Only caretaker accounts have a caretaker profile.' });
@@ -84,7 +84,7 @@ router.put('/me/profile', authRequired, (req, res) => {
     resume_name, resume_data,
   } = req.body || {};
 
-  // availability arrives as a schedule object — store it as a JSON string (matches
+  // availability arrives as a schedule object, so store it as a JSON string (matches
   // animal_types/services). A plain string (legacy) is stored as-is.
   const availabilityValue =
     availability == null ? null : typeof availability === 'string' ? availability : JSON.stringify(availability);

@@ -1,6 +1,6 @@
 <?php
 /**
- * Single caretaker profile — bio, experience, animals, services & rates,
+ * Single caretaker profile: bio, experience, animals, services & rates,
  * availability, and a booking-request form. Ports CaretakerProfile.jsx (the
  * live booking flow becomes a lead form until the phase-2 engine ships).
  *
@@ -93,7 +93,7 @@ while ( have_posts() ) :
 					<hr style="border:none;border-top:1px solid var(--line);margin:1.25rem 0;" />
 
 					<h3 style="font-size:1.125rem;">Request a booking</h3>
-					<p class="muted" style="font-size:.8125rem;margin-top:.25rem;">Send <?php echo esc_html( strtok( $name, ' ' ) ); ?> your dates and details. No charge — we'll connect you by email.</p>
+					<p class="muted" style="font-size:.8125rem;margin-top:.25rem;">Send <?php echo esc_html( strtok( $name, ' ' ) ); ?> your dates and details. No charge, we'll connect you by email.</p>
 
 					<?php trh_lead_notice(); ?>
 
@@ -116,7 +116,7 @@ while ( have_posts() ) :
 							<label class="label" for="bk-service">Service</label>
 							<select class="select" id="bk-service" name="service">
 								<?php foreach ( $rates as $key => $price ) : ?>
-									<option value="<?php echo esc_attr( trh_service_label( $key ) ); ?>"><?php echo esc_html( trh_service_label( $key ) . ' — ' . trh_money( $price ) . ' ' . trh_service_unit( $key ) ); ?></option>
+									<option value="<?php echo esc_attr( trh_service_label( $key ) ); ?>"><?php echo esc_html( trh_service_label( $key ) . ': ' . trh_money( $price ) . ' ' . trh_service_unit( $key ) ); ?></option>
 								<?php endforeach; ?>
 							</select>
 						</div>

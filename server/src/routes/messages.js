@@ -5,7 +5,7 @@ const { authRequired } = require('../auth');
 
 const router = express.Router();
 
-// GET /api/messages/threads — one entry per conversation partner, with last message.
+// GET /api/messages/threads: one entry per conversation partner, with last message.
 router.get('/threads', authRequired, (req, res) => {
   const rows = db
     .prepare(
@@ -37,7 +37,7 @@ router.get('/threads', authRequired, (req, res) => {
   res.json({ threads: [...threads.values()].sort((a, b) => (a.last_at < b.last_at ? 1 : -1)) });
 });
 
-// GET /api/messages/with/:userId — full conversation with one partner.
+// GET /api/messages/with/:userId: full conversation with one partner.
 router.get('/with/:userId', authRequired, (req, res) => {
   const rows = db
     .prepare(
@@ -49,7 +49,7 @@ router.get('/with/:userId', authRequired, (req, res) => {
   res.json({ messages: rows });
 });
 
-// POST /api/messages — send a message.
+// POST /api/messages: send a message.
 router.post('/', authRequired, (req, res) => {
   const { receiver_id, body, booking_id = null } = req.body || {};
   if (!receiver_id || !body) return res.status(400).json({ error: 'receiver_id and body are required.' });

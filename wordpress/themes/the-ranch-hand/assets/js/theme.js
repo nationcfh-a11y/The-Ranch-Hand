@@ -1,4 +1,4 @@
-/* The Ranch Hand — minimal theme interactions (mobile menu toggle). */
+/* The Ranch Hand: minimal theme interactions (mobile menu toggle). */
 (function () {
 	'use strict';
 	document.addEventListener('DOMContentLoaded', function () {

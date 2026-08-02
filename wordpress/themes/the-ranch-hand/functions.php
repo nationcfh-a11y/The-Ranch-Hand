@@ -30,7 +30,7 @@ function trh_setup() {
 	register_nav_menus(
 		array(
 			'primary' => 'Primary Navigation',
-			'footer_company' => 'Footer — Company',
+			'footer_company' => 'Footer: Company',
 		)
 	);
 }
@@ -61,16 +61,16 @@ function trh_resource_hints( $hints, $relation ) {
 }
 
 /* -------------------------------------------------------------------------
- * Customizer — a few easy-to-edit content knobs for the owner
+ * Customizer: a few easy-to-edit content knobs for the owner
  * ---------------------------------------------------------------------- */
 add_action( 'customize_register', 'trh_customize' );
 function trh_customize( $wp_customize ) {
-	$wp_customize->add_section( 'trh_hero', array( 'title' => 'Ranch Hand — Homepage Hero', 'priority' => 30 ) );
+	$wp_customize->add_section( 'trh_hero', array( 'title' => 'Ranch Hand: Homepage Hero', 'priority' => 30 ) );
 
 	$fields = array(
 		'trh_hero_eyebrow'  => array( 'label' => 'Hero eyebrow badge', 'default' => '🐴 Equine, livestock & ranch care, done right' ),
 		'trh_hero_title'    => array( 'label' => 'Hero headline', 'default' => 'Find a horse sitter or farm sitter you can trust.' ),
-		'trh_hero_subtitle' => array( 'label' => 'Hero subheadline', 'default' => 'The Ranch Hand connects horse and farm-animal owners with experienced, reviewed sitters — book horse sitting, farm sitting, and barn sitting services with an equine, livestock, or ranch sitter for overnights, feeding, turnout, mucking, and meds.', 'type' => 'textarea' ),
+		'trh_hero_subtitle' => array( 'label' => 'Hero subheadline', 'default' => 'The Ranch Hand connects horse and farm-animal owners with experienced, reviewed sitters. Book horse sitting, farm sitting, and barn sitting services with an equine, livestock, or ranch sitter for overnights, feeding, turnout, mucking, and meds.', 'type' => 'textarea' ),
 		'trh_hero_image'    => array( 'label' => 'Hero background image URL', 'default' => 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?auto=format&fit=crop&w=1600&q=70' ),
 	);
 

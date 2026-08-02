@@ -1,6 +1,6 @@
 <?php
 /**
- * Homepage — hero + search, value props, how-it-works, featured caretakers,
+ * Homepage: hero + search, value props, how-it-works, featured caretakers,
  * animal categories, services, testimonials, CTA. Ports client/src/pages/Home.jsx.
  *
  * @package The_Ranch_Hand
@@ -36,7 +36,7 @@ $testimonials = array(
 		<div style="max-width:42rem;">
 			<span class="badge badge-hay"><?php echo esc_html( trh_opt( 'trh_hero_eyebrow', '🐴 Equine, livestock & ranch care, done right' ) ); ?></span>
 			<h1 class="display-xl mt-4"><?php echo esc_html( trh_opt( 'trh_hero_title', 'Find a horse sitter or farm sitter you can trust.' ) ); ?></h1>
-			<p class="lead mt-4" style="max-width:36rem;"><?php echo esc_html( trh_opt( 'trh_hero_subtitle', 'The Ranch Hand connects horse and farm-animal owners with experienced, reviewed sitters — book horse sitting, farm sitting, and barn sitting services with an equine, livestock, or ranch sitter for overnights, feeding, turnout, mucking, and meds.' ) ); ?></p>
+			<p class="lead mt-4" style="max-width:36rem;"><?php echo esc_html( trh_opt( 'trh_hero_subtitle', 'The Ranch Hand connects horse and farm-animal owners with experienced, reviewed sitters. Book horse sitting, farm sitting, and barn sitting services with an equine, livestock, or ranch sitter for overnights, feeding, turnout, mucking, and meds.' ) ); ?></p>
 		</div>
 
 		<!-- Search bar -> filters the directory -->
@@ -87,7 +87,7 @@ $testimonials = array(
 <section class="section section-alt">
 	<div class="container-rh">
 		<h2 class="display-lg text-center">How horse &amp; farm sitting works</h2>
-		<p class="muted text-center measure mt-2">Three simple steps from “I need to leave town” to “my animals are in good hands” — book a horse sitter or farm sitter in minutes.</p>
+		<p class="muted text-center measure mt-2">Three simple steps from “I need to leave town” to “my animals are in good hands.” Book a horse sitter or farm sitter in minutes.</p>
 		<div class="grid grid-3 mt-10">
 			<?php foreach ( $steps as $s ) : ?>
 				<div class="card text-center">
@@ -142,7 +142,7 @@ $testimonials = array(
 <section class="section section-dark">
 	<div class="container-rh">
 		<h2 class="display-lg text-center" style="color:var(--cream-100);">Care for every animal</h2>
-		<p class="text-center measure mt-2" style="color:rgba(247,241,227,.8);">From a single trail horse to a whole mixed farm — find a horse sitter, livestock sitter, or ranch sitter who specializes in your animals.</p>
+		<p class="text-center measure mt-2" style="color:rgba(247,241,227,.8);">From a single trail horse to a whole mixed farm, find a horse sitter, livestock sitter, or ranch sitter who specializes in your animals.</p>
 		<div class="grid grid-6 mt-10">
 			<?php foreach ( trh_animals() as $name => $a ) : ?>
 				<a class="animal-tile" href="<?php echo esc_url( add_query_arg( 'animal', rawurlencode( $name ), $trh_dir ) ); ?>">
@@ -159,7 +159,7 @@ $testimonials = array(
 <section class="section">
 	<div class="container-rh">
 		<h2 class="display-lg text-center">Horse &amp; farm sitting services</h2>
-		<p class="muted text-center measure mt-2">From barn sitting and overnight care to feeding, turnout, and meds — pick the horse sitting or farm sitting service you need.</p>
+		<p class="muted text-center measure mt-2">From barn sitting and overnight care to feeding, turnout, and meds, pick the horse sitting or farm sitting service you need.</p>
 		<div class="grid grid-3 mt-8">
 			<?php foreach ( trh_services() as $key => $s ) : ?>
 				<a class="card card-hover" href="<?php echo esc_url( add_query_arg( 'service', $key, $trh_dir ) ); ?>">

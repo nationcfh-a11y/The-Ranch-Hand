@@ -41,14 +41,14 @@ const SCHEDULE_PRESETS = [
   sched(['Mon', 'Wed', 'Fri', 'Sat', 'Sun'], '09:00', '16:00'),
 ];
 
-// Avatar helper — pravatar provides free placeholder portraits (no API key needed).
+// Avatar helper: pravatar provides free placeholder portraits (no API key needed).
 const avatar = (n) => `https://i.pravatar.cc/400?img=${n}`;
 
 // --- Caretakers -------------------------------------------------------------
 const caretakers = [
   {
     name: 'Dale Whitaker', location: 'Bozeman, MT', img: 12, exp: 18,
-    headline: 'Lifelong horseman — 18 years on working ranches.',
+    headline: 'Lifelong horseman with 18 years on working ranches.',
     bio: 'Grew up on a cattle and quarter-horse outfit outside Bozeman. I treat every animal like my own and send daily photo updates. Comfortable with green horses, seniors, and everything in between.',
     animals: ['Horses', 'Cattle', 'Mixed Farm'],
     services: { barn_sitting: 45, overnight: 110, turnout: 30, mucking: 18, medication: 22 },
@@ -64,7 +64,7 @@ const caretakers = [
   },
   {
     name: 'Tucker Boone', location: 'Stephenville, TX', img: 13, exp: 9,
-    headline: 'Rodeo background — confident with big herds.',
+    headline: 'Rodeo background, confident with big herds.',
     bio: 'Team roper and ranch hand. I can manage large cattle operations, handle feeding rotations, and keep stalls spotless. No herd too big.',
     animals: ['Cattle', 'Horses', 'Mixed Farm'],
     services: { barn_sitting: 40, overnight: 95, mucking: 15, turnout: 28 },
@@ -73,7 +73,7 @@ const caretakers = [
   {
     name: 'Hannah Pelletier', location: 'Burlington, VT', img: 9, exp: 7,
     headline: 'Goats, sheep & poultry specialist.',
-    bio: 'I run a small homestead and adore small ruminants and birds. Kidding season, milking, coop care — I have done it all. Gentle with skittish animals.',
+    bio: 'I run a small homestead and adore small ruminants and birds. Kidding season, milking, coop care. I have done it all. Gentle with skittish animals.',
     animals: ['Goats/Sheep', 'Poultry', 'Pigs'],
     services: { drop_in: 28, barn_sitting: 38, mucking: 14, medication: 20 },
     availability: 'Mornings and evenings daily.',
@@ -136,8 +136,8 @@ const caretakers = [
   },
   {
     name: 'Nora Kelly', location: 'Missoula, MT', img: 47, exp: 13,
-    headline: 'Whole-farm sitter — horses to honeybees.',
-    bio: 'Run a diversified family farm and love the variety. Horses, cattle, goats, pigs, poultry — I keep the whole place humming while you are away. Daily detailed reports.',
+    headline: 'Whole-farm sitter: horses to honeybees.',
+    bio: 'Run a diversified family farm and love the variety. Horses, cattle, goats, pigs, poultry. I keep the whole place humming while you are away. Daily detailed reports.',
     animals: ['Mixed Farm', 'Horses', 'Cattle', 'Goats/Sheep', 'Poultry'],
     services: { barn_sitting: 46, overnight: 108, drop_in: 30, turnout: 31, mucking: 17, medication: 24 },
     availability: 'Available most days; loves long stays.',
@@ -279,7 +279,7 @@ const insertMessage = db.prepare(
 );
 const convo = [
   { sender_id: ownerIds[0], receiver_id: caretakerIds[0], body: 'Hi Dale! Are you free to watch my two horses and goats June 20–23?', ago: '-4 days' },
-  { sender_id: caretakerIds[0], receiver_id: ownerIds[0], body: 'Hi Karen — yes, those dates work. Happy to do overnights. Any special feeding I should know about?', ago: '-4 days' },
+  { sender_id: caretakerIds[0], receiver_id: ownerIds[0], body: 'Hi Karen, yes, those dates work. Happy to do overnights. Any special feeding I should know about?', ago: '-4 days' },
   { sender_id: ownerIds[0], receiver_id: caretakerIds[0], body: 'Bandit needs his joint supplement each morning. Everything else is straightforward!', ago: '-3 days' },
   { sender_id: caretakerIds[0], receiver_id: ownerIds[0], body: 'Got it. I will send daily photos. Looking forward to it!', ago: '-3 days' },
 ];

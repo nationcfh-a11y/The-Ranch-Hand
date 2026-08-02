@@ -31,7 +31,7 @@ try {
 }
 
 if (!key.client_email || !key.private_key) {
-  console.error('✗ That file has no "client_email"/"private_key" — is it a service-account key?');
+  console.error('✗ That file has no "client_email"/"private_key". Is it a service-account key?');
   console.error('  (An OAuth client secret is a different file and will not work here.)');
   process.exit(1);
 }

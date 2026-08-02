@@ -1,10 +1,10 @@
 /* ==========================================================================
-   The Ranch Hand — "Rustic Barn" design system, ported to plain CSS.
+   The Ranch Hand: "Rustic Barn" design system, ported to plain CSS.
    Tokens mirror client/tailwind.config.js + client/src/index.css exactly.
    ========================================================================== */
 
 :root {
-  /* Brand accent — deep blue denim (the live app's override of "barn red"). */
+  /* Brand accent: deep blue denim (the live app's override of "barn red"). */
   --barn: #2E4B7C;      --barn-dark: #1D3050;   --barn-light: #5476A8;
   --hay: #D9A441;       --hay-dark: #B9831F;    --hay-light: #E7C078;
   --saddle: #6B4226;    --saddle-dark: #4A2D18; --saddle-light: #8A5C3A;
@@ -67,7 +67,7 @@ ul { margin: 0; }
 .mt-6 { margin-top: 1.5rem; } .mt-8 { margin-top: 2rem; } .mt-10 { margin-top: 2.5rem; }
 .measure { max-width: 40rem; margin-left: auto; margin-right: auto; }
 
-/* Typographic scale — fluid via clamp() so headings scale down cleanly on
+/* Typographic scale: fluid via clamp() so headings scale down cleanly on
    phones instead of wrapping into a cramped, "compressed" block. */
 .display-xl { font-family: var(--font-display); font-weight: 700; font-size: clamp(2.05rem, 1.2rem + 4vw, 3.25rem); line-height: 1.12; }
 .display-lg { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.55rem, 1rem + 2.6vw, 1.875rem); line-height: 1.18; }
@@ -284,7 +284,7 @@ ul { margin: 0; }
 html, body { overflow-x: hidden; }
 
 @media (max-width: 639px) {
-  /* Comfortable, consistent vertical rhythm — smaller than the desktop 4rem. */
+  /* Comfortable, consistent vertical rhythm, smaller than the desktop 4rem. */
   .section { padding: 2.75rem 0; }
   .hero-inner { padding: 3.25rem 0; }
 

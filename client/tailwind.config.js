@@ -6,7 +6,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Primary brand accent — deep blue denim (formerly barn red).
+        // Primary brand accent: deep blue denim (formerly barn red).
         barn:    { DEFAULT: '#2E4B7C', dark: '#1D3050', light: '#5476A8' },
         hay:     { DEFAULT: '#D9A441', dark: '#B9831F', light: '#E7C078' },
         saddle:  { DEFAULT: '#6B4226', dark: '#4A2D18', light: '#8A5C3A' },

@@ -53,7 +53,7 @@ export default function Home() {
               Find a horse sitter or farm sitter you can trust.
             </h1>
             <p className="mt-4 max-w-xl text-lg leading-relaxed text-cream/90">
-              The Ranch Hand connects horse and farm-animal owners with experienced, reviewed sitters — book horse
+              The Ranch Hand connects horse and farm-animal owners with experienced, reviewed sitters. Book horse
               sitting, farm sitting, and barn sitting services with an equine, livestock, or ranch sitter for
               overnights, feeding, turnout, mucking, and meds.
             </p>
@@ -82,7 +82,7 @@ export default function Home() {
         <div className="container-rh">
           <h2 className="text-center font-display text-3xl font-700">How horse &amp; farm sitting works</h2>
           <p className="mx-auto mt-2 max-w-xl text-center text-charcoal-muted">
-            Three simple steps from “I need to leave town” to “my animals are in good hands” — book a horse sitter or
+            Three simple steps from “I need to leave town” to “my animals are in good hands.” Book a horse sitter or
             farm sitter in minutes.
           </p>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
@@ -127,7 +127,7 @@ export default function Home() {
         <div className="container-rh">
           <h2 className="text-center font-display text-3xl font-700 text-cream-100">Care for every animal</h2>
           <p className="mx-auto mt-2 max-w-xl text-center text-cream/80">
-            From a single trail horse to a whole mixed farm — find a horse sitter, livestock sitter, or ranch sitter
+            From a single trail horse to a whole mixed farm, find a horse sitter, livestock sitter, or ranch sitter
             who specializes in your animals.
           </p>
           <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
@@ -150,7 +150,7 @@ export default function Home() {
       <section className="container-rh py-16">
         <h2 className="text-center font-display text-3xl font-700">Horse &amp; farm sitting services</h2>
         <p className="mx-auto mt-2 max-w-xl text-center text-charcoal-muted">
-          From barn sitting and overnight care to feeding, turnout, and meds — pick the horse sitting or farm sitting
+          From barn sitting and overnight care to feeding, turnout, and meds, pick the horse sitting or farm sitting
           service you need.
         </p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

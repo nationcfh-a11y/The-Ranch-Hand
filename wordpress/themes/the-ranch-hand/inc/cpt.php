@@ -45,7 +45,7 @@ function trh_animals() {
 		'Goats/Sheep' => array( 'icon' => '🐐', 'blurb' => 'Small ruminants, milking, kidding & lambing.' ),
 		'Pigs'        => array( 'icon' => '🐖', 'blurb' => 'Pot-bellies to pasture pigs, feeding & wallows.' ),
 		'Poultry'     => array( 'icon' => '🐓', 'blurb' => 'Chickens, ducks & turkeys; eggs & coop care.' ),
-		'Mixed Farm'  => array( 'icon' => '🚜', 'blurb' => 'A little of everything — whole-farm sitting.' ),
+		'Mixed Farm'  => array( 'icon' => '🚜', 'blurb' => 'A little of everything: whole-farm sitting.' ),
 	);
 }
 
@@ -155,7 +155,7 @@ function trh_caretaker_rates( $post_id ) {
 	return is_array( $rates ) ? $rates : array();
 }
 
-/** Lowest rate across all services offered — used for "from $X" on cards. */
+/** Lowest rate across all services offered; used for "from $X" on cards. */
 function trh_caretaker_from_price( $post_id ) {
 	$rates = trh_caretaker_rates( $post_id );
 	$vals  = array_filter( array_map( 'floatval', array_values( $rates ) ) );

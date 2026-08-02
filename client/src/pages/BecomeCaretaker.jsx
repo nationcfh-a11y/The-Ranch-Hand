@@ -27,7 +27,7 @@ export default function BecomeCaretaker() {
   const [experience, setExperience] = useState(1);
   const [animalTypes, setAnimalTypes] = useState([]);
   const [availabilityNotes, setAvailabilityNotes] = useState('');
-  const [resume, setResume] = useState(null); // { name, size, dataUrl } — required qualifications doc
+  const [resume, setResume] = useState(null); // { name, size, dataUrl }: required qualifications doc
   // Services & rates
   const [selectedServices, setSelectedServices] = useState([]);
   const [rates, setRates] = useState({});
@@ -49,7 +49,7 @@ export default function BecomeCaretaker() {
       return setError('Please upload a PDF, Word document, or image.');
     }
     if (file.size > 5 * 1024 * 1024) {
-      return setError('That file is too large — please keep it under 5 MB.');
+      return setError('That file is too large. Please keep it under 5 MB.');
     }
     const reader = new FileReader();
     reader.onload = () => setResume({ name: file.name, size: file.size, dataUrl: reader.result });
@@ -162,11 +162,11 @@ export default function BecomeCaretaker() {
             <>
               <h2 className="text-xl font-700">Your profile</h2>
               <Field label="Location"><input className="input" value={profile.location} onChange={(e) => setProfile({ ...profile, location: e.target.value })} placeholder="Bozeman, MT" /></Field>
-              <Field label="Photo URL" hint="Optional — paste a link to a photo of yourself.">
+              <Field label="Photo URL" hint="Optional. Paste a link to a photo of yourself.">
                 <input className="input" value={profile.photo_url} onChange={(e) => setProfile({ ...profile, photo_url: e.target.value })} placeholder="https://…" />
               </Field>
               <Field label="Headline" hint="One line owners see first.">
-                <input className="input" value={profile.headline} onChange={(e) => setProfile({ ...profile, headline: e.target.value })} placeholder="Lifelong horseman — 18 years on working ranches." />
+                <input className="input" value={profile.headline} onChange={(e) => setProfile({ ...profile, headline: e.target.value })} placeholder="Lifelong horseman with 18 years on working ranches." />
               </Field>
               <Field label="About you">
                 <textarea rows="4" className="input" value={profile.bio} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} placeholder="Tell owners about your experience and how you care for animals." />
@@ -215,7 +215,7 @@ export default function BecomeCaretaker() {
                       <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" strokeLinecap="round" />
                     </svg>
                     <span className="font-bold text-saddle-dark">Click to upload your resume</span>
-                    <span className="text-xs text-charcoal-muted">PDF, Word, or image — up to 5 MB</span>
+                    <span className="text-xs text-charcoal-muted">PDF, Word, or image, up to 5 MB</span>
                   </label>
                 ) : (
                   <div className="flex items-center gap-3 rounded-md border border-line bg-cream-100 p-3">
@@ -230,7 +230,7 @@ export default function BecomeCaretaker() {
                   </div>
                 )}
                 <p className="mt-1.5 text-xs text-charcoal-muted">
-                  Required — share certifications, references, or work history so owners can trust your experience.
+                  Required. Share certifications, references, or work history so owners can trust your experience.
                 </p>
               </div>
 
@@ -296,7 +296,7 @@ export default function BecomeCaretaker() {
 function Field({ label, hint, children }) {
   return (
     <label className="block">
-      <span className="label">{label}{hint && <span className="ml-1 font-normal text-charcoal-muted">— {hint}</span>}</span>
+      <span className="label">{label}{hint && <span className="ml-1 font-normal text-charcoal-muted">({hint})</span>}</span>
       {children}
     </label>
   );

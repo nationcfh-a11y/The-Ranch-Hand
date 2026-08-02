@@ -81,7 +81,7 @@ export default function Signup() {
             <AddressInput value={form.location} onChange={(val) => set('location', val)} id="signup-location" />
           </div>
 
-          {/* Radius prompt — appears once a location is chosen, like Facebook Marketplace. */}
+          {/* Radius prompt appears once a location is chosen, like Facebook Marketplace. */}
           {form.location.trim() && (
             <label className="block rounded-md border border-line bg-cream-100 p-3">
               <span className="label">Search radius</span>

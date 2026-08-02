@@ -7,7 +7,7 @@ const { mirrorSignup } = require('../sheets');
 
 const router = express.Router();
 
-// POST /api/auth/signup — create an owner or caretaker account.
+// POST /api/auth/signup: create an owner or caretaker account.
 router.post('/signup', (req, res) => {
   const { name, email, password, role, location = '', bio = '', photo_url = '', search_radius } = req.body || {};
   if (!name || !email || !password || !role) {
@@ -55,7 +55,7 @@ router.post('/login', (req, res) => {
   return res.json({ token: signToken(user), user: publicUser(user) });
 });
 
-// GET /api/auth/me — current user from token.
+// GET /api/auth/me: current user from token.
 router.get('/me', authRequired, (req, res) => {
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
   if (!user) return res.status(404).json({ error: 'User not found.' });

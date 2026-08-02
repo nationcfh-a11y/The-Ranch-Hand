@@ -1,6 +1,6 @@
 <?php
 /**
- * 404 — page not found.
+ * 404: page not found.
  *
  * @package The_Ranch_Hand
  */

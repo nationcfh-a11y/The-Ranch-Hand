@@ -5,7 +5,7 @@ const { authRequired } = require('../auth');
 
 const router = express.Router();
 
-// POST /api/reviews — owner reviews a caretaker (optionally tied to a booking).
+// POST /api/reviews: owner reviews a caretaker (optionally tied to a booking).
 router.post('/', authRequired, (req, res) => {
   if (req.user.role !== 'owner') {
     return res.status(403).json({ error: 'Only owners can leave reviews.' });

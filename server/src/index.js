@@ -1,4 +1,4 @@
-// The Ranch Hand — Express REST API entry point.
+// The Ranch Hand: Express REST API entry point.
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -37,7 +37,7 @@ app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/messages', require('./routes/messages'));
 
 // Serve the built client (production bundle) so the whole app runs from this one
-// origin/port — no dev-server module requests or proxy needed.
+// origin/port, with no dev-server module requests or proxy needed.
 const clientDist = path.join(__dirname, '..', '..', 'client', 'dist');
 app.use(express.static(clientDist));
 // SPA fallback: any non-/api GET returns index.html so client-side routing works.

@@ -1,6 +1,6 @@
 // Booking flow: 1) details (service, dates, animals, instructions) → 2) review with
 // fee breakdown (caretaker 15% commission + owner 7% service fee) → 3) confirmation.
-// Payment is fully SIMULATED — no processor, no real charge.
+// Payment is fully SIMULATED: no processor, no real charge.
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../lib/api';
@@ -121,7 +121,7 @@ export default function Booking() {
             <label className="label" htmlFor="service">Service</label>
             <select id="service" value={service} onChange={(e) => setService(e.target.value)} className="input">
               {c.services.map((s) => (
-                <option key={s} value={s}>{SERVICE_LABELS[s]} — {money(c.rates[s])} {SERVICE_UNITS[s]}</option>
+                <option key={s} value={s}>{SERVICE_LABELS[s]}: {money(c.rates[s])} {SERVICE_UNITS[s]}</option>
               ))}
             </select>
           </div>

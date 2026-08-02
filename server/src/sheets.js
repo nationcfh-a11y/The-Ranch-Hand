@@ -1,12 +1,12 @@
-// Google Sheets mirror — a temporary, read-only-for-humans CRM view of signups.
+// Google Sheets mirror: a temporary, read-only-for-humans CRM view of signups.
 //
 // SQLite remains the source of truth for auth. This module only *mirrors* new
 // users into a spreadsheet so they can be eyeballed/filtered before a real CRM
 // exists. Two deliberate properties:
 //
-//   1. Fail-soft — every export swallows its own errors. A bad key, a revoked
+//   1. Fail-soft: every export swallows its own errors. A bad key, a revoked
 //      share, or no internet must never break signup.
-//   2. Opt-in — with no credentials configured it is a silent no-op, so the app
+//   2. Opt-in: with no credentials configured it is a silent no-op, so the app
 //      still runs fully offline with zero external setup (as the README promises).
 //
 // Password hashes are never written here.
@@ -18,7 +18,7 @@ const CLIENT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '';
 const PRIVATE_KEY = (process.env.GOOGLE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
 const TAB = process.env.GOOGLE_SHEETS_TAB || 'Signups';
 
-// Human-friendly column labels — this sheet is read by people, not code.
+// Human-friendly column labels: this sheet is read by people, not code.
 // Deliberately no password/hash column: credentials never leave SQLite.
 const HEADERS = ['ID', 'Full Name', 'Email', 'Role', 'Location', 'Search Radius (mi)', 'Signed Up'];
 
@@ -79,7 +79,7 @@ function ensureSheetReady(sheets) {
 }
 
 // --- Public API --------------------------------------------------------------
-// Appends one signup row. Never throws and never rejects — call and forget.
+// Appends one signup row. Never throws and never rejects. Call and forget.
 function mirrorSignup(user) {
   if (!isConfigured()) return Promise.resolve(false);
 
@@ -109,7 +109,7 @@ function mirrorSignup(user) {
     });
     return true;
   })().catch((err) => {
-    // Log and move on — the user is already saved in SQLite.
+    // Log and move on. The user is already saved in SQLite.
     console.warn(`⚠️  Google Sheets mirror failed for ${user.email}: ${err.message}`);
     return false;
   });

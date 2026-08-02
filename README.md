@@ -1,7 +1,7 @@
 # 🐴 The Ranch Hand
 
 A full-stack, two-sided **marketplace** connecting horse & farm-animal owners with experienced
-sitters/caretakers — structurally modeled on Rover.com, adapted for the equine & livestock niche.
+sitters/caretakers, structurally modeled on Rover.com, adapted for the equine & livestock niche.
 Runs entirely on your machine with **zero external services or API keys**. Bookings and payments
 are **simulated** (no real money changes hands).
 
@@ -10,9 +10,9 @@ are **simulated** (no real money changes hands).
 > [`brand_assets/ranch-hand-design-system.md`](brand_assets/ranch-hand-design-system.md), then
 > wired into `client/tailwind.config.js` and `client/src/index.css`.
 
-> **🚀 Going live on WordPress first?** A WordPress theme port of this site —
+> **🚀 Going live on WordPress first?** A WordPress theme port of this site,
 > a branded marketing + caretaker-directory site with lead capture, ready to
-> deploy to **WordPress.com Business** via GitHub Deployments — lives in
+> deploy to **WordPress.com Business** via GitHub Deployments, lives in
 > [`wordpress/`](wordpress/README.md). That's the "site now, full app later"
 > path. This Node/React app is **phase 2**.
 
@@ -65,7 +65,7 @@ Every seeded account uses the password **`password123`**:
 
 ## What you can do
 - **Browse & search** caretakers with filters (animal type, service, price, rating) + sorting.
-- **View a caretaker profile** — bio, experience, animals, services & pricing, reviews, availability calendar.
+- **View a caretaker profile**: bio, experience, animals, services & pricing, reviews, availability calendar.
 - **Book** (as an owner): pick a service, dates, animals, and special care instructions, then review a
   **clear fee breakdown** before confirming a simulated booking.
 - **Become a caretaker**: multi-step onboarding (account → profile → experience/animals → services & rates).
@@ -138,13 +138,13 @@ POST /api/messages                   send message (auth)
 ## Google Sheets CRM mirror (optional)
 
 Until there's a real CRM, new signups can be **mirrored** into a Google Sheet for easy
-eyeballing. **SQLite remains the source of truth** — the sheet is a disposable view.
+eyeballing. **SQLite remains the source of truth**. The sheet is a disposable view.
 
 - Only **new signups** are mirrored (seeded demo accounts are not).
 - The sync is **fail-soft**: it runs *after* the HTTP response and swallows its own errors,
   so a bad key or no internet can never slow down or break signup.
 - **Password hashes are never written to the sheet.**
-- With no credentials set, it's a silent no-op — the app still runs fully offline.
+- With no credentials set, it's a silent no-op. The app still runs fully offline.
 
 Setup: copy `server/.env.example` → `server/.env` and follow the steps in that file
 (enable the Sheets API, create a service account, share the sheet with its email as **Editor**).
@@ -176,5 +176,5 @@ WordPress.com's GitHub Deployments pulls from there. See
   `npm run seed` to reset.
 - Secrets live in `server/.env` (git-ignored). Never commit the service-account JSON key.
 - Caretaker/owner avatars and the hero photo load from free placeholder services
-  (pravatar / Unsplash) — no keys required, but you'll need an internet connection for images.
+  (pravatar / Unsplash). No keys required, but you'll need an internet connection for images.
   Everything else works fully offline.

@@ -14,7 +14,7 @@ function parseAvailability(raw) {
     if (v && typeof v === 'object' && !Array.isArray(v)) {
       return { availability: v, availability_text: '' };
     }
-  } catch { /* not JSON — fall through to legacy text */ }
+  } catch { /* not JSON, fall through to legacy text */ }
   return { availability: null, availability_text: String(raw) };
 }
 

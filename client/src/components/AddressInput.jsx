@@ -1,5 +1,5 @@
 // Accessible address autocomplete (ARIA combobox pattern).
-// Backed by Photon (https://photon.komoot.io) — a free, keyless geocoder built on
+// Backed by Photon (https://photon.komoot.io), a free, keyless geocoder built on
 // OpenStreetMap data. No API key required. Falls back to plain text if offline:
 // whatever the user types is still saved, so the field never blocks signup.
 import { useEffect, useId, useRef, useState } from 'react';
@@ -65,7 +65,7 @@ export default function AddressInput({ value, onChange, id, placeholder = 'Start
         setOpen(true);
         setActive(-1);
       } catch {
-        /* offline or aborted — keep the free-typed value, just no suggestions */
+        /* offline or aborted. Keep the free-typed value, just no suggestions */
       } finally {
         setLoading(false);
       }
@@ -130,7 +130,7 @@ export default function AddressInput({ value, onChange, id, placeholder = 'Start
           const label = formatPlace(data.features?.[0]?.properties || {});
           if (label) commit(label);
         } catch {
-          /* ignore — user can still type */
+          /* ignore; user can still type */
         } finally {
           setLocating(false);
         }
