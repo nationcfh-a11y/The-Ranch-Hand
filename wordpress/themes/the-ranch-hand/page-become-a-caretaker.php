@@ -2,14 +2,21 @@
 /**
  * Template Name: Become a Caretaker
  *
- * Recruiting landing + application form. Auto-applied to the page with slug
- * "become-a-caretaker" (created on theme activation), and also selectable as a
+ * Recruiting landing page for Hands. Auto-applied to the page with slug
+ * "become-a-caretaker" (the "Become A Hand" nav link), and also selectable as a
  * page template. Ports client/src/pages/BecomeCaretaker.jsx.
+ *
+ * Every primary call to action here points at the three-step profile wizard
+ * (page-hand-signup.php). The short "send us a note" form at the bottom is the
+ * low-commitment fallback for someone who is not ready to make a profile yet;
+ * it feeds the same Leads pipeline as the other forms (inc/forms.php).
  *
  * @package The_Ranch_Hand
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 get_header();
+
+$signup = trh_signup_url( 1 );
 
 $perks = array(
 	array( '💵', 'Set your own rates', 'You decide what each service costs. See exactly what you keep on every booking.' ),
@@ -17,9 +24,9 @@ $perks = array(
 	array( '🤝', 'Owners who trust you', 'Your experience, animals, and reviews are front and center so the right owners find you.' ),
 );
 $steps = array(
-	array( 1, 'Tell us about you', 'Your experience, the animals you handle, and where you work.' ),
-	array( 2, 'List your services', 'Pick the services you offer and set a rate for each.' ),
-	array( 3, 'Start getting requests', 'Owners near you send booking requests. You accept the ones you want.' ),
+	array( 1, 'Create your account', 'Your name, phone, and the town you work out of. About two minutes.' ),
+	array( 2, 'Add your proof', 'Resume, profile picture, references, and your social accounts.' ),
+	array( 3, 'Check off your experience', 'Everything you have really done, from blanketing and wound care to foal watch.' ),
 );
 ?>
 
@@ -31,7 +38,8 @@ $steps = array(
 			<span class="badge badge-hay">🤠 Become a Ranch Hand</span>
 			<h1 class="display-xl mt-4">Turn your animal experience into income.</h1>
 			<p class="lead mt-4" style="max-width:36rem;">Know your way around a barn? Join The Ranch Hand as a horse sitter, farm sitter, or livestock caretaker. Set your own rates, pick your own schedule, and get matched with owners who need you.</p>
-			<a class="btn btn-hay mt-6" href="#apply">Apply to be a caretaker</a>
+			<a class="btn btn-hay mt-6" href="<?php echo esc_url( $signup ); ?>">Create my Hand profile</a>
+			<p class="mt-4" style="color:rgba(247,241,227,.85);font-size:.9375rem;">Free to join. Three steps. Start with <?php echo esc_html( trh_trust_base() ); ?>+ Trust Score points.</p>
 		</div>
 	</div>
 </section>
@@ -50,7 +58,33 @@ $steps = array(
 	</div>
 </section>
 
+<!-- Trust Score explainer -->
 <section class="section section-alt">
+	<div class="container-rh">
+		<div class="score-head">
+			<?php trh_trust_dial( trh_trust_max(), '9rem' ); ?>
+			<div>
+				<h2 class="display-lg">Your Trust Score opens better jobs</h2>
+				<p class="muted mt-4">Trust Score is our point system for Hands. Every piece of proof you add to your profile is worth points, the same way leaving a review somewhere earns you a few. The higher your score, the higher you sit in front of owners, and the better the work that comes your way.</p>
+				<ul class="score-list mt-6">
+					<?php foreach ( trh_trust_rows( 0 ) as $row ) : ?>
+						<li class="score-row">
+							<span class="score-tick" aria-hidden="true">+</span>
+							<span class="score-text">
+								<span class="score-label"><?php echo esc_html( $row['label'] ); ?><?php echo $row['bonus'] ? ' <span class="label-opt">bonus</span>' : ''; ?></span>
+								<span class="score-blurb"><?php echo esc_html( $row['blurb'] ); ?></span>
+							</span>
+							<span class="score-pts"><?php echo esc_html( $row['points'] ); ?></span>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+				<p class="help mt-4">Finish the required steps and you land on <?php echo esc_html( trh_trust_base() ); ?>. Add a photo and your socials and you start at <?php echo esc_html( trh_trust_max() ); ?>. It keeps climbing as you complete jobs and collect reviews.</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="section">
 	<div class="container-rh">
 		<h2 class="display-lg text-center">How to get started</h2>
 		<div class="grid grid-3 mt-10">
@@ -65,11 +99,23 @@ $steps = array(
 	</div>
 </section>
 
-<!-- Application form -->
+<!-- Primary call to action -->
 <section class="section" id="apply">
+	<div class="container-rh">
+		<div class="bg-barn text-center" style="border-radius:var(--radius-xl);padding:3rem 2rem;">
+			<h2 class="display-lg" style="color:var(--cream-100);">Ready to get hired?</h2>
+			<p class="lead mt-4 measure" style="color:rgba(247,241,227,.9);">Build your profile in three short steps and claim your Trust Score. You can stop after any step and pick it back up later, nothing is lost.</p>
+			<a class="btn btn-hay mt-6" href="<?php echo esc_url( $signup ); ?>">Create my Hand profile</a>
+			<p class="mt-4" style="color:rgba(247,241,227,.75);font-size:.875rem;">Already started? <a class="link" style="color:var(--hay-light);" href="<?php echo esc_url( trh_dashboard_url() ); ?>">Sign in to your dashboard</a></p>
+		</div>
+	</div>
+</section>
+
+<!-- Low-commitment fallback: talk to a person first -->
+<section class="section section-alt">
 	<div class="container-rh" style="max-width:42rem;">
-		<h2 class="display-lg text-center">Apply to be a caretaker</h2>
-		<p class="muted text-center mt-2">Tell us a bit about your experience. We'll review your application and get you set up with a profile.</p>
+		<h2 class="display-lg text-center">Not ready to build a profile?</h2>
+		<p class="muted text-center mt-2">Send us a note instead and we will answer your questions first. No profile needed.</p>
 
 		<div class="card mt-8">
 			<?php trh_lead_notice(); ?>
@@ -101,8 +147,8 @@ $steps = array(
 					<label class="label" for="ap-msg">Your experience with animals</label>
 					<textarea class="textarea" id="ap-msg" name="message" placeholder="Which animals have you cared for? How many years? Any certifications (vet tech, etc.)?" required></textarea>
 				</div>
-				<button class="btn btn-primary" type="submit" style="width:100%;">Submit application</button>
-				<p class="help text-center">We review every application by hand and reply by email.</p>
+				<button class="btn btn-secondary" type="submit" style="width:100%;">Send my note</button>
+				<p class="help text-center">We read every note by hand and reply by email.</p>
 			</form>
 		</div>
 	</div>

@@ -9,12 +9,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'TRH_VERSION', '1.0.4' );
+define( 'TRH_VERSION', '1.1.0' );
 
 require get_template_directory() . '/inc/cpt.php';
 require get_template_directory() . '/inc/seed.php';
 require get_template_directory() . '/inc/forms.php';
 require get_template_directory() . '/inc/pages.php';
+require get_template_directory() . '/inc/hands.php';
+require get_template_directory() . '/inc/hand-signup.php';
 require get_template_directory() . '/inc/migrate-emdash.php';
 
 /* -------------------------------------------------------------------------
@@ -51,6 +53,21 @@ function trh_assets() {
 	);
 	wp_enqueue_style( 'trh-theme', get_template_directory_uri() . '/assets/css/theme.css', array( 'trh-fonts' ), TRH_VERSION );
 	wp_enqueue_script( 'trh-theme', get_template_directory_uri() . '/assets/js/theme.js', array(), TRH_VERSION, true );
+
+	// Signup wizard + dashboard extras (city autocomplete, checklist, previews).
+	// The 29k-city dataset itself is fetched by the script on first interaction
+	// with the location field, never as part of the page load.
+	if ( is_page( array( 'hand-signup', 'dashboard' ) ) ) {
+		wp_enqueue_script( 'trh-hand-signup', get_template_directory_uri() . '/assets/js/hand-signup.js', array(), TRH_VERSION, true );
+		wp_localize_script(
+			'trh-hand-signup',
+			'TRH_SIGNUP',
+			array(
+				'citiesUrl' => get_template_directory_uri() . '/assets/data/us-cities.json',
+				'states'    => trh_us_states(),
+			)
+		);
+	}
 }
 
 /** Preconnect to Google Fonts (matches the app's index.html). */
