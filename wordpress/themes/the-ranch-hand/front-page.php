@@ -194,6 +194,24 @@ $testimonials = array(
 	</div>
 </section>
 
+<!-- ---- Photo gallery ---- -->
+<?php $trh_gallery = trh_gallery_images(); ?>
+<?php if ( ! empty( $trh_gallery ) ) : ?>
+<section class="section">
+	<div class="container-rh">
+		<h2 class="display-lg text-center">Life at the ranch</h2>
+		<p class="muted text-center measure mt-2">A few moments from the trails, arenas, and pastures our sitters and owners call home.</p>
+		<div class="photo-gallery mt-10">
+			<?php foreach ( $trh_gallery as $img ) : ?>
+				<figure class="photo-item">
+					<img src="<?php echo esc_url( $img['url'] ); ?>" alt="<?php echo esc_attr( $img['alt'] ); ?>" loading="lazy" />
+				</figure>
+			<?php endforeach; ?>
+		</div>
+	</div>
+</section>
+<?php endif; ?>
+
 <!-- ---- CTA ---- -->
 <section class="section">
 	<div class="container-rh">

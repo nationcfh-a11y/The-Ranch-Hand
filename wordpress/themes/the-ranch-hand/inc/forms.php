@@ -55,7 +55,15 @@ function trh_handle_lead() {
 	}
 
 	$is_application = ( 'application' === $type );
-	$title = ( $is_application ? 'Application: ' : 'Booking request: ' ) . $name;
+	$is_contact     = ( 'contact' === $type );
+	if ( $is_application ) {
+		$prefix = 'Application: ';
+	} elseif ( $is_contact ) {
+		$prefix = 'Contact: ';
+	} else {
+		$prefix = 'Booking request: ';
+	}
+	$title = $prefix . $name;
 
 	$lead_id = wp_insert_post(
 		array(
@@ -74,7 +82,7 @@ function trh_handle_lead() {
 
 	// Notify the admin (fail-soft; a mail error never blocks the thank-you).
 	$lines = array(
-		'A new ' . ( $is_application ? 'caretaker application' : 'booking request' ) . ' came in from The Ranch Hand:',
+		'A new ' . ( $is_application ? 'caretaker application' : ( $is_contact ? 'contact message' : 'booking request' ) ) . ' came in from The Ranch Hand:',
 		'',
 		'Name:     ' . $name,
 		'Email:    ' . $email,
@@ -82,7 +90,7 @@ function trh_handle_lead() {
 	if ( $phone )     { $lines[] = 'Phone:    ' . $phone; }
 	if ( $location )  { $lines[] = 'Location: ' . $location; }
 	if ( $caretaker ) { $lines[] = 'Sitter:   ' . $caretaker; }
-	if ( $service )   { $lines[] = 'Service:  ' . $service; }
+	if ( $service )   { $lines[] = ( $is_contact ? 'Subject:  ' : 'Service:  ' ) . $service; }
 	if ( $dates )     { $lines[] = 'Dates:    ' . $dates; }
 	if ( $message )   { $lines[] = ''; $lines[] = 'Message:'; $lines[] = $message; }
 

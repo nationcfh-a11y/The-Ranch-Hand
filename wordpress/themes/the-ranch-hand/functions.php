@@ -9,11 +9,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'TRH_VERSION', '1.0.3' );
+define( 'TRH_VERSION', '1.0.4' );
 
 require get_template_directory() . '/inc/cpt.php';
 require get_template_directory() . '/inc/seed.php';
 require get_template_directory() . '/inc/forms.php';
+require get_template_directory() . '/inc/pages.php';
 require get_template_directory() . '/inc/migrate-emdash.php';
 
 /* -------------------------------------------------------------------------
@@ -117,6 +118,37 @@ function trh_stars( $value, $count = null ) {
 		echo ' <span class="count">(' . esc_html( (int) $count ) . ')</span>';
 	}
 	echo '</span>';
+}
+
+/**
+ * Homepage photo gallery: every image dropped into assets/img/gallery/ is shown.
+ * Files render in alphabetical order, so prefix names like 01-, 02- to control order.
+ * Alt text is derived from the filename ("01-cowgirl-on-paint-horse" -> "Cowgirl on paint horse").
+ *
+ * @return array<int, array{url:string, alt:string}>
+ */
+function trh_gallery_images() {
+	$dir = get_template_directory() . '/assets/img/gallery';
+	if ( ! is_dir( $dir ) ) {
+		return array();
+	}
+	$files = glob( $dir . '/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG,WEBP}', GLOB_BRACE );
+	if ( empty( $files ) ) {
+		return array();
+	}
+	sort( $files );
+	$uri = get_template_directory_uri() . '/assets/img/gallery';
+	$out = array();
+	foreach ( $files as $path ) {
+		$base = basename( $path );
+		$name = pathinfo( $base, PATHINFO_FILENAME );
+		$alt  = ucfirst( str_replace( array( '-', '_' ), ' ', preg_replace( '/^\d+[\s_-]*/', '', $name ) ) );
+		$out[] = array(
+			'url' => $uri . '/' . rawurlencode( $base ),
+			'alt' => $alt,
+		);
+	}
+	return $out;
 }
 
 /** Render a single caretaker card (used on homepage + directory). */

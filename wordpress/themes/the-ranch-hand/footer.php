@@ -74,6 +74,11 @@ $trh_dir = trh_directory_url();
 		<div class="container-rh inner">
 			<p>© <?php echo esc_html( gmdate( 'Y' ) ); ?> The Ranch Hand. Trusted equine, livestock &amp; ranch care.</p>
 			<p>Find a sitter who knows horses.</p>
+			<nav class="footer-legal" aria-label="Legal">
+				<a href="<?php echo esc_url( home_url( '/contact/' ) ); ?>">Contact</a>
+				<a href="<?php echo esc_url( home_url( '/privacy-policy/' ) ); ?>">Privacy Policy</a>
+				<a href="<?php echo esc_url( home_url( '/terms/' ) ); ?>">Terms of Service</a>
+			</nav>
 		</div>
 	</div>
 </footer>
