@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 get_header();
 
 $trh_dir  = trh_directory_url();
-$hero_img = trh_opt( 'trh_hero_image', 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?auto=format&fit=crop&w=1600&q=70' );
+$hero_img = trh_opt( 'trh_hero_image', get_template_directory_uri() . '/assets/img/hero-home.webp' );
 
 $value_props = array(
 	array( '🛡️', 'Vetted & experienced', 'Every horse sitter and farm sitter lists real ranch experience, the animals they handle, and verified reviews.' ),

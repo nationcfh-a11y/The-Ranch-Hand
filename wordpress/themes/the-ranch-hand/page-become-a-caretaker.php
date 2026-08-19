@@ -24,7 +24,7 @@ $steps = array(
 ?>
 
 <section class="hero">
-	<div class="hero-bg" style="background-image:url('https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&w=1600&q=70');" aria-hidden="true"></div>
+	<div class="hero-bg" style="background-image:url('<?php echo esc_url( get_template_directory_uri() . '/assets/img/hero-become-caretaker.webp' ); ?>');" aria-hidden="true"></div>
 	<div class="hero-grain" aria-hidden="true"></div>
 	<div class="container-rh hero-inner">
 		<div style="max-width:42rem;">
