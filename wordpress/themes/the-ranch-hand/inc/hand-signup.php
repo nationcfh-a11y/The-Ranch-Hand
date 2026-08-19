@@ -37,7 +37,10 @@ const TRH_MAX_PHOTO_BYTES  = 12582912; // 12 MB
  * @return string Token to put in the redirect URL.
  */
 function trh_signup_flash_set( $errors, $values = array() ) {
-	$token = wp_generate_password( 16, false, false );
+	// Lowercase hex on purpose. The read side has to sanitize the token coming
+	// back in the URL, and every sanitizer worth using lowercases, so a
+	// mixed-case token can never be looked up again.
+	$token = bin2hex( random_bytes( 12 ) );
 	set_transient( 'trh_signup_' . $token, array( 'errors' => $errors, 'values' => $values ), 20 * MINUTE_IN_SECONDS );
 	return $token;
 }
@@ -49,14 +52,25 @@ function trh_signup_flash() {
 		return $flash;
 	}
 	$flash = array( 'errors' => array(), 'values' => array() );
-	if ( empty( $_GET['e'] ) ) {
+	if ( empty( $_GET['e'] ) || ! is_scalar( $_GET['e'] ) ) {
 		return $flash;
 	}
-	$token = sanitize_key( wp_unslash( $_GET['e'] ) );
-	$data  = get_transient( 'trh_signup_' . $token );
+
+	$token = strtolower( trim( (string) wp_unslash( $_GET['e'] ) ) );
+	if ( ! preg_match( '/^[a-f0-9]{24}$/', $token ) ) {
+		return $flash;
+	}
+
+	$data = get_transient( 'trh_signup_' . $token );
 	if ( is_array( $data ) ) {
 		$flash = wp_parse_args( $data, $flash );
+		return $flash;
 	}
+
+	// The token is well formed but the payload is gone: expired, or the object
+	// cache dropped it. Never leave someone staring at a form that looks like it
+	// did nothing when they pressed the button.
+	$flash['errors'] = array( 'We could not save that. Please check your details and send the form again.' );
 	return $flash;
 }
 
@@ -81,9 +95,9 @@ function trh_signup_error_notice() {
 	if ( ! $errors ) {
 		return;
 	}
-	echo '<div class="notice notice-error"><ul class="notice-list">';
+	echo '<div class="notice notice-error" id="trh-signup-errors" tabindex="-1"><ul class="notice-list">';
 	foreach ( $errors as $error ) {
-		echo '<li>' . wp_kses( $error, array( 'a' => array( 'href' => array() ) ) ) . '</li>';
+		echo '<li>' . wp_kses( $error, array( 'a' => array( 'href' => array() ), 'strong' => array() ) ) . '</li>';
 	}
 	echo '</ul></div>';
 }
@@ -91,7 +105,9 @@ function trh_signup_error_notice() {
 /** Bounce back to a step with errors attached. */
 function trh_signup_fail( $step, $errors, $values = array() ) {
 	$token = trh_signup_flash_set( (array) $errors, $values );
-	wp_safe_redirect( add_query_arg( 'e', $token, trh_signup_url( $step ) ) );
+	// The fragment matters: without it the bounce looks identical to "the button
+	// did nothing", because the notice can be below the fold on a long step.
+	wp_safe_redirect( add_query_arg( 'e', $token, trh_signup_url( $step ) ) . '#trh-signup-errors' );
 	exit;
 }
 
@@ -99,9 +115,24 @@ function trh_signup_fail( $step, $errors, $values = array() ) {
  * Shared sanitizing helpers
  * ---------------------------------------------------------------------- */
 
+/**
+ * POST field as a raw string, or '' if it is missing or is not a scalar.
+ *
+ * The scalar check matters: a crafted request can send any field as an array,
+ * and some of core's sanitizers (sanitize_email() among them) fatal on one.
+ */
+function trh_post_raw( $key ) {
+	return isset( $_POST[ $key ] ) && is_scalar( $_POST[ $key ] ) ? (string) wp_unslash( $_POST[ $key ] ) : '';
+}
+
 /** POST field as plain text. */
 function trh_post_text( $key ) {
-	return isset( $_POST[ $key ] ) ? sanitize_text_field( wp_unslash( $_POST[ $key ] ) ) : '';
+	return sanitize_text_field( trh_post_raw( $key ) );
+}
+
+/** One value out of a POSTed array field, as plain text. */
+function trh_row_text( $row, $key ) {
+	return isset( $row[ $key ] ) && is_scalar( $row[ $key ] ) ? sanitize_text_field( wp_unslash( $row[ $key ] ) ) : '';
 }
 
 /** Digits in a phone number, for a "did they type a real number" check. */
@@ -123,28 +154,30 @@ function trh_normalize_url( $raw ) {
 	return $host ? $url : '';
 }
 
-/** A login name that is free, derived from the person's name then their email. */
-function trh_unique_username( $first, $last, $email ) {
-	$candidates = array(
-		sanitize_user( $first . $last, true ),
-		sanitize_user( $first . '.' . $last, true ),
-		sanitize_user( strtok( $email, '@' ), true ),
-	);
-	foreach ( $candidates as $base ) {
-		$base = strtolower( trim( $base ) );
-		if ( strlen( $base ) < 3 ) {
-			continue;
-		}
-		if ( ! username_exists( $base ) ) {
-			return $base;
-		}
-		for ( $i = 2; $i <= 40; $i++ ) {
-			if ( ! username_exists( $base . $i ) ) {
-				return $base . $i;
-			}
-		}
+/**
+ * Check a username the Hand chose for themselves.
+ *
+ * Stricter than core's validate_username() on purpose: core permits spaces and
+ * punctuation that make a login name awkward to type and to say over the phone.
+ * A username is permanent once the account exists, so it is worth being fussy
+ * here rather than apologetic later.
+ *
+ * @return string Error message, or '' when the name is usable.
+ */
+function trh_username_problem( $username ) {
+	if ( '' === $username ) {
+		return 'Please choose a username.';
 	}
-	return 'hand' . wp_generate_password( 8, false, false );
+	if ( ! preg_match( '/^[A-Za-z0-9][A-Za-z0-9._-]{2,29}$/', $username ) ) {
+		return 'A username needs to be 3 to 30 characters and can use only letters, numbers, periods, hyphens, and underscores, starting with a letter or number.';
+	}
+	if ( ! validate_username( $username ) ) {
+		return 'That username is not allowed here. Please pick a different one.';
+	}
+	if ( username_exists( $username ) ) {
+		return 'The username <strong>' . esc_html( $username ) . '</strong> is already taken. Please pick another, or <a href="' . esc_url( trh_dashboard_url() ) . '">sign in</a> if it is yours.';
+	}
+	return '';
 }
 
 /** The logged-in Hand's profile, or redirect them to the start of signup. */
@@ -160,7 +193,7 @@ function trh_require_hand_profile() {
 /** Verify a step's nonce or bail with a friendly error. */
 function trh_signup_check_nonce( $step ) {
 	$field = 'trh_hand_nonce';
-	$ok    = isset( $_POST[ $field ] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST[ $field ] ) ), 'trh_hand_step' . $step );
+	$ok    = wp_verify_nonce( trh_post_text( $field ), 'trh_hand_step' . $step );
 	if ( ! $ok ) {
 		trh_signup_fail( $step, array( 'Your session timed out. Please fill the form in again.' ) );
 	}
@@ -185,12 +218,14 @@ function trh_handle_hand_step1() {
 		'first_name' => trh_post_text( 'first_name' ),
 		'last_name'  => trh_post_text( 'last_name' ),
 		'phone'      => trh_post_text( 'phone' ),
-		'email'      => isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '',
+		'email'      => sanitize_email( trh_post_raw( 'email' ) ),
 		'city'       => trh_post_text( 'city' ),
 		'state'      => strtoupper( trh_post_text( 'state' ) ),
 		'zip'        => trh_post_text( 'zip' ),
+		'username'   => trh_post_text( 'username' ),
 	);
-	$password = isset( $_POST['password'] ) ? (string) wp_unslash( $_POST['password'] ) : '';
+	$password = trh_post_raw( 'password' );
+	$confirm  = trh_post_raw( 'password_confirm' );
 	$states   = trh_us_states();
 	$errors   = array();
 
@@ -217,8 +252,16 @@ function trh_handle_hand_step1() {
 	if ( '' !== $values['zip'] && ! preg_match( '/^\d{5}$/', $values['zip'] ) ) {
 		$errors[] = 'A ZIP code should be five digits, or you can leave it blank.';
 	}
+	$username_problem = trh_username_problem( $values['username'] );
+	if ( '' !== $username_problem ) {
+		$errors[] = $username_problem;
+	}
 	if ( strlen( $password ) < 8 ) {
 		$errors[] = 'Please choose a password of at least 8 characters.';
+	} elseif ( $password !== $confirm ) {
+		// Worth catching: there is no self-service password reset yet, so a typo
+		// here would lock the Hand out of their own profile.
+		$errors[] = 'Those two passwords do not match.';
 	}
 	if ( empty( $_POST['agree'] ) ) {
 		$errors[] = 'Please agree to the Terms of Service and Privacy Policy.';
@@ -230,7 +273,7 @@ function trh_handle_hand_step1() {
 
 	$user_id = wp_insert_user(
 		array(
-			'user_login'   => trh_unique_username( $values['first_name'], $values['last_name'], $values['email'] ),
+			'user_login'   => $values['username'],
 			'user_pass'    => $password,
 			'user_email'   => $values['email'],
 			'first_name'   => $values['first_name'],
@@ -266,6 +309,7 @@ function trh_handle_hand_step1() {
 	update_post_meta( $post_id, 'trh_first_name', $values['first_name'] );
 	update_post_meta( $post_id, 'trh_last_name', $values['last_name'] );
 	update_post_meta( $post_id, 'trh_email', $values['email'] );
+	update_post_meta( $post_id, 'trh_username', $values['username'] );
 	update_post_meta( $post_id, 'trh_phone', $values['phone'] );
 	update_post_meta( $post_id, 'trh_city', $values['city'] );
 	update_post_meta( $post_id, 'trh_state', $values['state'] );
@@ -328,12 +372,14 @@ function trh_handle_hand_step2() {
 	}
 
 	// Socials.
-	$socials = array();
-	foreach ( array_keys( trh_social_networks() ) as $key ) {
-		$raw = isset( $_POST['social'][ $key ] ) ? wp_unslash( $_POST['social'][ $key ] ) : '';
+	$socials    = array();
+	$social_in  = isset( $_POST['social'] ) && is_array( $_POST['social'] ) ? $_POST['social'] : array();
+	$networks   = trh_social_networks();
+	foreach ( array_keys( $networks ) as $key ) {
+		$raw = isset( $social_in[ $key ] ) && is_scalar( $social_in[ $key ] ) ? wp_unslash( $social_in[ $key ] ) : '';
 		$url = trh_normalize_url( $raw );
 		if ( '' !== trim( (string) $raw ) && '' === $url ) {
-			$errors[] = 'That does not look like a working link for ' . trh_social_networks()[ $key ]['label'] . '.';
+			$errors[] = 'That does not look like a working link for ' . $networks[ $key ]['label'] . '.';
 			continue;
 		}
 		if ( $url ) {
@@ -350,10 +396,10 @@ function trh_handle_hand_step2() {
 			continue;
 		}
 		$ref = array(
-			'name'         => isset( $row['name'] ) ? sanitize_text_field( wp_unslash( $row['name'] ) ) : '',
-			'relationship' => isset( $row['relationship'] ) ? sanitize_text_field( wp_unslash( $row['relationship'] ) ) : '',
-			'phone'        => isset( $row['phone'] ) ? sanitize_text_field( wp_unslash( $row['phone'] ) ) : '',
-			'email'        => isset( $row['email'] ) ? sanitize_email( wp_unslash( $row['email'] ) ) : '',
+			'name'         => trh_row_text( $row, 'name' ),
+			'relationship' => trh_row_text( $row, 'relationship' ),
+			'phone'        => trh_row_text( $row, 'phone' ),
+			'email'        => sanitize_email( trh_row_text( $row, 'email' ) ),
 		);
 		if ( '' === $ref['name'] ) {
 			continue; // an untouched row, not an error
@@ -390,9 +436,9 @@ function trh_handle_hand_step3() {
 	$post_id = trh_require_hand_profile();
 
 	$valid    = array_keys( trh_experience_labels() );
-	$selected = isset( $_POST['experience'] ) && is_array( $_POST['experience'] )
-		? array_values( array_intersect( array_map( 'sanitize_key', wp_unslash( $_POST['experience'] ) ), $valid ) )
-		: array();
+	$posted   = isset( $_POST['experience'] ) && is_array( $_POST['experience'] ) ? $_POST['experience'] : array();
+	$posted   = array_map( 'sanitize_key', array_filter( wp_unslash( $posted ), 'is_scalar' ) );
+	$selected = array_values( array_intersect( $posted, $valid ) );
 
 	if ( count( $selected ) < TRH_EXPERIENCE_MIN ) {
 		trh_signup_fail(
@@ -401,8 +447,8 @@ function trh_handle_hand_step3() {
 		);
 	}
 
-	$years = isset( $_POST['experience_years'] ) ? max( 0, min( 60, (int) $_POST['experience_years'] ) ) : 0;
-	$about = isset( $_POST['about'] ) ? sanitize_textarea_field( wp_unslash( $_POST['about'] ) ) : '';
+	$years = max( 0, min( 60, (int) trh_post_raw( 'experience_years' ) ) );
+	$about = sanitize_textarea_field( trh_post_raw( 'about' ) );
 
 	update_post_meta( $post_id, 'trh_experience', $selected );
 	update_post_meta( $post_id, 'trh_experience_years', $years );
@@ -619,7 +665,10 @@ function trh_notify_admin_new_hand( $post_id, $stage ) {
 		'Location:    ' . trh_hand_field( $post_id, 'location' ),
 		'Trust Score: ' . trh_trust_score( $post_id ) . ' / ' . trh_trust_max(),
 		'',
-		'Review and publish: ' . get_edit_post_link( $post_id, 'raw' ),
+		// Built by hand rather than with get_edit_post_link(), which returns null
+		// here: the current user is the Hand who just signed up and has no
+		// edit_post capability.
+		'Review and publish: ' . admin_url( 'post.php?post=' . (int) $post_id . '&action=edit' ),
 	);
 
 	wp_mail(
@@ -641,7 +690,8 @@ function trh_email_hand_welcome( $post_id ) {
 		'Your account is created. You can pick your profile back up any time here:',
 		trh_dashboard_url(),
 		'',
-		'Sign in with this email address and the password you chose.',
+		'Your username is: ' . trh_hand_field( $post_id, 'username' ),
+		'Sign in with that username (or this email address) and the password you chose.',
 		'',
 		'The Ranch Hand',
 	);
@@ -680,7 +730,7 @@ function trh_email_hand_complete( $post_id, $score ) {
 add_action( 'admin_post_nopriv_trh_hand_login', 'trh_handle_hand_login' );
 add_action( 'admin_post_trh_hand_login', 'trh_handle_hand_login' );
 function trh_handle_hand_login() {
-	if ( ! isset( $_POST['trh_login_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['trh_login_nonce'] ) ), 'trh_hand_login' ) ) {
+	if ( ! wp_verify_nonce( trh_post_text( 'trh_login_nonce' ), 'trh_hand_login' ) ) {
 		wp_safe_redirect( add_query_arg( 'login', 'expired', trh_dashboard_url() ) );
 		exit;
 	}
@@ -688,7 +738,7 @@ function trh_handle_hand_login() {
 	$user = wp_signon(
 		array(
 			'user_login'    => trh_post_text( 'log' ),
-			'user_password' => isset( $_POST['pwd'] ) ? (string) wp_unslash( $_POST['pwd'] ) : '',
+			'user_password' => trh_post_raw( 'pwd' ),
 			'remember'      => ! empty( $_POST['rememberme'] ),
 		),
 		is_ssl()

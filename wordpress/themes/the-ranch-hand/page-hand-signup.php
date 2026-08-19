@@ -141,14 +141,39 @@ get_header();
 								<p class="help">Type your town and pick it from the list to confirm which state you mean. Small towns not in the list are fine, just choose your state.</p>
 							</fieldset>
 
-							<div class="field">
-								<label class="label" for="hs-pass">Create a password</label>
-								<div class="pw-wrap">
-									<input class="input" type="password" id="hs-pass" name="password" minlength="8" autocomplete="new-password" required />
-									<button class="pw-toggle" type="button" data-trh-pw="hs-pass" aria-label="Show password">Show</button>
+							<fieldset class="fieldset">
+								<legend class="legend">Create your sign-in</legend>
+								<p class="help" style="margin-top:0;margin-bottom:1rem;">This is how you get back into your dashboard to edit your profile and, later, to answer booking requests.</p>
+
+								<div class="field">
+									<label class="label" for="hs-username">Username</label>
+									<input class="input" type="text" id="hs-username" name="username" autocomplete="username"
+										minlength="3" maxlength="30" pattern="[A-Za-z0-9][A-Za-z0-9._\-]{2,29}"
+										spellcheck="false" autocapitalize="none"
+										placeholder="e.g. jane.rides"
+										value="<?php echo esc_attr( trh_signup_value( 'username' ) ); ?>" required />
+									<p class="help">3 to 30 characters: letters, numbers, periods, hyphens, and underscores. Pick something you will remember, it cannot be changed later.</p>
 								</div>
-								<p class="help">At least 8 characters. You will use your email and this password to get back into your dashboard.</p>
-							</div>
+
+								<div class="grid grid-2" style="gap:0 1.25rem;">
+									<div class="field">
+										<label class="label" for="hs-pass">Password</label>
+										<div class="pw-wrap">
+											<input class="input" type="password" id="hs-pass" name="password" minlength="8" autocomplete="new-password" required />
+											<button class="pw-toggle" type="button" data-trh-pw="hs-pass" aria-label="Show password">Show</button>
+										</div>
+										<p class="help">At least 8 characters.</p>
+									</div>
+									<div class="field">
+										<label class="label" for="hs-pass2">Confirm password</label>
+										<div class="pw-wrap">
+											<input class="input" type="password" id="hs-pass2" name="password_confirm" minlength="8" autocomplete="new-password" required />
+											<button class="pw-toggle" type="button" data-trh-pw="hs-pass2" aria-label="Show password">Show</button>
+										</div>
+										<p class="help">Type it once more so a typo cannot lock you out.</p>
+									</div>
+								</div>
+							</fieldset>
 
 							<label class="check-inline">
 								<input type="checkbox" name="agree" value="1" required />

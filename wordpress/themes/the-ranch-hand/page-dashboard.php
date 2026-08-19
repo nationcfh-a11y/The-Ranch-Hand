@@ -17,7 +17,7 @@ get_header();
 $trh_profile = trh_hand_profile_id();
 $trh_welcome = ! empty( $_GET['welcome'] );
 $trh_saved   = ! empty( $_GET['saved'] );
-$trh_login   = isset( $_GET['login'] ) ? sanitize_key( wp_unslash( $_GET['login'] ) ) : '';
+$trh_login   = isset( $_GET['login'] ) && is_scalar( $_GET['login'] ) ? sanitize_key( wp_unslash( $_GET['login'] ) ) : '';
 ?>
 
 <?php if ( ! is_user_logged_in() ) : ?>
@@ -43,8 +43,8 @@ $trh_login   = isset( $_GET['login'] ) ? sanitize_key( wp_unslash( $_GET['login'
 					<input type="hidden" name="action" value="trh_hand_login" />
 					<?php wp_nonce_field( 'trh_hand_login', 'trh_login_nonce' ); ?>
 					<div class="field">
-						<label class="label" for="dash-log">Email</label>
-						<input class="input" type="text" id="dash-log" name="log" autocomplete="username" required />
+						<label class="label" for="dash-log">Username or email</label>
+						<input class="input" type="text" id="dash-log" name="log" autocomplete="username" spellcheck="false" autocapitalize="none" required />
 					</div>
 					<div class="field">
 						<label class="label" for="dash-pwd">Password</label>
@@ -268,11 +268,12 @@ $trh_login   = isset( $_GET['login'] ) ? sanitize_key( wp_unslash( $_GET['login'
 					<div class="card mt-6">
 						<h2 class="aside-title">Contact details</h2>
 						<ul class="dash-facts">
+							<li><span>Username</span><strong><?php echo esc_html( trh_hand_field( $trh_profile, 'username', wp_get_current_user()->user_login ) ); ?></strong></li>
 							<li><span>Email</span><strong><?php echo esc_html( trh_hand_field( $trh_profile, 'email' ) ); ?></strong></li>
 							<li><span>Phone</span><strong><?php echo esc_html( trh_hand_field( $trh_profile, 'phone' ) ); ?></strong></li>
 							<li><span>Location</span><strong><?php echo esc_html( trh_hand_field( $trh_profile, 'location' ) ); ?></strong></li>
 						</ul>
-						<p class="help mt-4">Need one of these changed? <a class="link" href="<?php echo esc_url( home_url( '/contact/' ) ); ?>">Tell us</a> and we will update it.</p>
+						<p class="help mt-4">Need one of these changed? <a class="link" href="<?php echo esc_url( home_url( '/contact/' ) ); ?>">Tell us</a> and we will update it. Your username is fixed.</p>
 					</div>
 
 					<div class="card mt-6">

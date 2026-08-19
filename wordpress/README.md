@@ -23,10 +23,20 @@ Node/React app in `../client` and `../server`) is **phase 2**.
   (`/sitters/`) with animal / service / search / sort filters.
 - **Caretaker profiles:** bio, experience, animals, services & rates,
   availability, reviews summary, and a **booking-request form**.
-- **Become a Caretaker:** recruiting landing + **application form**.
+- **Become a Hand:** recruiting landing page that explains the Trust Score and
+  sends people into the signup wizard.
+- **Hand signup (3 steps):** a real sign-up flow at `/hand-signup/` that creates
+  an account and a profile. Step 1 name/phone/email/location (with a
+  29,000-town city autocomplete that confirms which state you mean) plus the
+  **username and password** they pick, step 2 resume, profile picture, social
+  links and references, step 3 a 54-item experience checklist. See
+  [Hand signup & Trust Score](#hand-signup--trust-score).
+- **Hand dashboard:** `/dashboard/` with front-end sign-in, the Trust Score and its
+  breakdown, review status, and one-click links back to whatever is still
+  unclaimed.
 - **12 sample caretakers** auto-loaded on activation (edit/replace them under
   **Caretakers** in wp-admin).
-- **Leads:** every booking request and application is saved under
+- **Leads:** every booking request and contact message is saved under
   **wp-admin → Leads** *and* emailed to your admin address.
 - Exact "Rustic Barn" look: denim-blue `#2E4B7C`, hay gold, saddle brown,
   cream, Bitter + Nunito Sans fonts. No build step, plain CSS.
@@ -71,6 +81,72 @@ theme lives at `wordpress/themes/the-ranch-hand`.
    *Primary Navigation*. Without one, the theme shows sensible default links.
 5. Replace the sample sitters under **Caretakers**, and swap the pravatar demo
    photos for real featured images.
+
+---
+
+## Hand signup & Trust Score
+
+A "Hand" (sitter/caretaker) signs up at `/hand-signup/`, reached from every call
+to action on **Become a Hand**. Signing up creates two linked records:
+
+1. a **WordPress user** with the `trh_hand` role (`read` only, no wp-admin
+   powers), using the username and password they chose, so they can sign back in
+   and keep editing, and
+2. a **`caretaker` post** authored by that user, held at status **Pending
+   review** so nothing unvetted ever appears in the public directory.
+
+Step 1 creates both and signs the person in, so a half-finished signup is never
+lost: they can come back, sign in at `/dashboard/`, and carry on where they
+stopped. Steps 2 and 3 double as the edit screens the dashboard links to.
+
+Usernames are validated more strictly than WordPress core does (3-30 characters;
+letters, numbers, `.`, `-`, `_`; must start with a letter or number) because a
+login name is permanent and gets read out over the phone. Sign-in accepts the
+username **or** the email address. The dashboard shows the Hand their own
+username, in case they forget it.
+
+### Trust Score
+
+Points are **derived from the profile**, never incremented, so the total can be
+recalculated at any time and can't drift or be double-awarded
+(`trh_recalculate_trust_score()`).
+
+| Earned by | Points | Step |
+|-----------|-------:|------|
+| Contact details & location | 40 | 1 |
+| Resume on file | 20 | 2 |
+| References added (1+) | 20 | 2 |
+| Experience checklist (3+ ticks) | 20 | 3 |
+| Profile picture *(bonus)* | 15 | 2 |
+| Social accounts connected *(bonus)* | 15 | 2 |
+
+Finishing the required path lands on **100**; with both bonuses, **130**. Change
+the amounts, labels, or add new ways to earn in **one place**:
+`trh_trust_components()` in `themes/the-ranch-hand/inc/hands.php`. The wizard,
+the dashboard, the landing page, and the admin column all read from it.
+
+### Reviewing an application
+
+Open **wp-admin → Caretakers**. Hand-created profiles show their score in the
+**Trust Score** column, and the *Hand signup details* panel on the edit screen
+lists phone, email, location, resume link, references, and every checklist item
+they ticked. Set the post to **Published** to put them live in `/sitters/`; add
+their rates and availability in the same screen.
+
+### Where things live
+
+| Thing | File |
+|-------|------|
+| Role, data model, Trust Score, experience checklist | `inc/hands.php` |
+| Step handlers, validation, uploads, front-end login | `inc/hand-signup.php` |
+| The wizard (all 3 steps) | `page-hand-signup.php` |
+| The dashboard + sign-in | `page-dashboard.php` |
+| City autocomplete, checklist, previews | `assets/js/hand-signup.js` |
+| 29,738 US towns, by state | `assets/data/us-cities.json` (fetched lazily, on first use of the location field only) |
+
+> **Not built yet:** self-service password reset. A Hand who forgets their
+> password has to contact you, and you reset it in **wp-admin → Users**. The
+> sign-in form links to the contact page for exactly this.
 
 ---
 

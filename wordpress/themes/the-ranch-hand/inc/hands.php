@@ -110,6 +110,25 @@ function trh_dashboard_url() {
 	return trh_page_url( 'dashboard' );
 }
 
+/**
+ * Keep the wizard and the dashboard out of the page cache.
+ *
+ * Both are wrong to cache: the wizard's forms carry nonces, which expire, and
+ * the dashboard is per-person. Managed WordPress.com hosting puts Batcache in
+ * front of anonymous traffic (look for the `x-ac: ... HIT/STALE` header), and it
+ * skips any response that sends no-cache headers.
+ */
+add_action( 'template_redirect', 'trh_hand_nocache' );
+function trh_hand_nocache() {
+	if ( ! is_page( array( 'hand-signup', 'dashboard' ) ) ) {
+		return;
+	}
+	nocache_headers();
+	if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+		define( 'DONOTCACHEPAGE', true );
+	}
+}
+
 /** Keep the signup wizard and the private dashboard out of search engines. */
 add_filter( 'wp_robots', 'trh_hand_robots' );
 function trh_hand_robots( $robots ) {
@@ -599,6 +618,7 @@ function trh_render_hand_meta_box( $post ) {
 
 	echo '<p><strong>Trust Score:</strong> ' . esc_html( trh_trust_score( $post->ID ) ) . ' / ' . esc_html( trh_trust_max() ) . '</p>';
 	echo '<p><strong>Signup completed:</strong> ' . ( trh_hand_is_complete( $post->ID ) ? 'yes, all 3 steps' : 'no, stopped after step ' . esc_html( trh_hand_step_done( $post->ID ) ) ) . '</p>';
+	echo '<p><strong>Username:</strong> ' . esc_html( trh_hand_field( $post->ID, 'username' ) ) . '</p>';
 	echo '<p><strong>Email:</strong> ' . esc_html( trh_hand_field( $post->ID, 'email' ) ) . ' &nbsp; <strong>Phone:</strong> ' . esc_html( trh_hand_field( $post->ID, 'phone' ) ) . '</p>';
 	echo '<p><strong>Location:</strong> ' . esc_html( trh_hand_field( $post->ID, 'location' ) );
 	$zip = trh_hand_field( $post->ID, 'zip' );
@@ -632,7 +652,7 @@ function trh_render_hand_meta_box( $post ) {
 					isset( $ref['email'] ) ? $ref['email'] : '',
 				)
 			);
-			echo '<li>' . esc_html( implode( ' — ', $bits ) ) . '</li>';
+			echo '<li>' . esc_html( implode( ' / ', $bits ) ) . '</li>';
 		}
 		echo '</ul>';
 	}
@@ -662,7 +682,7 @@ function trh_caretaker_column_content( $column, $post_id ) {
 		return;
 	}
 	if ( ! trh_hand_field( $post_id, 'user_id' ) ) {
-		echo '&mdash;';
+		echo '<span aria-hidden="true">-</span>';
 		return;
 	}
 	echo esc_html( trh_trust_score( $post_id ) . ' / ' . trh_trust_max() );
