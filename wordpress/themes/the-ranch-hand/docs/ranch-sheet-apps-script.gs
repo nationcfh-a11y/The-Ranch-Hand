@@ -2,14 +2,17 @@
  * The Ranch Hand — signup mirror for the "The Ranch Hand Users" sheet.
  *
  * WordPress POSTs a signup to this Web App, which writes it to the tab named in
- * the "tab" field ("Ranch" or "Hand"). The row is sent as JSON in "payload",
- * keyed by the EXACT column header names on that tab. The script matches an
- * existing row by its "Email" value and updates it (so the 3-step Hand signup
- * fills one row as it progresses); otherwise it appends a new row. "ID" and
- * "Signed Up" are filled in by the script on insert and left alone on updates.
+ * the "tab" field ("Ranch" or "New Hand"). The row is sent as JSON in "payload",
+ * keyed by the EXACT column header names on that tab.
  *
- * Only the columns present in a given POST are written, so a later step never
- * blanks a column an earlier step already filled.
+ * Matching an existing row (so re-submits update in place instead of adding a
+ * new row):
+ *   - if the payload has an "ID", the row is matched by the ID column
+ *     (WordPress sends its own stable ID);
+ *   - otherwise it is matched by the "Email" column.
+ * On insert, ID is taken from the payload when given, else auto-numbered.
+ * "Signed Up" is stamped on insert. Only columns present in the payload are
+ * written, so a later step never blanks a column an earlier step filled.
  *
  * HOW TO INSTALL / UPDATE
  *   1. Open the sheet -> Extensions -> Apps Script.
@@ -21,9 +24,8 @@
  *                   Version: New version -> Deploy. The /exec URL stays the same.
  *
  * OPTIONAL HARDENING
- *   Set SHARED_TOKEN below to any random string, and paste the same string into
- *   the "Sheet secret token" field in the Customizer. Requests without a
- *   matching token are then rejected.
+ *   Set SHARED_TOKEN below and paste the same value into the Customizer's
+ *   "Sheet secret token" field; requests without a matching token are rejected.
  */
 
 var SHARED_TOKEN = ''; // must match the Customizer field if set.
@@ -36,15 +38,14 @@ function doPost(e) {
       return _json({ ok: false, error: 'bad token' });
     }
 
-    // Row data + target tab. New callers send tab + JSON payload; the else branch
-    // keeps the original flat-field format working just in case.
     var tabName, data;
     if (p.payload) {
       tabName = p.tab || 'Ranch';
       data = JSON.parse(p.payload);
     } else {
+      // Legacy flat fields, kept working just in case.
       var role = String(p.role || '').toLowerCase();
-      tabName = (role === 'owner' || role === 'ranch') ? 'Ranch' : 'Hand';
+      tabName = (role === 'owner' || role === 'ranch') ? 'Ranch' : 'New Hand';
       data = {
         'Full Name': p.name || '',
         'Email': p.email || '',
@@ -57,43 +58,44 @@ function doPost(e) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName(tabName) || ss.insertSheet(tabName);
 
-    // If the tab has no header row yet, seed one from the payload keys.
     if (sheet.getLastRow() === 0) {
       sheet.appendRow(['ID'].concat(Object.keys(data)).concat(['Signed Up']));
     }
 
     var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    var col = {}; // header name -> 1-based column
+    var col = {};
     for (var i = 0; i < headers.length; i++) {
       var h = String(headers[i]).trim();
       if (h) { col[h] = i + 1; }
     }
 
-    var emailCol = col['Email'];
     var idCol = col['ID'];
     var signedCol = col['Signed Up'];
 
-    // Find an existing row by email (case-insensitive).
+    // Match on ID when supplied, otherwise on Email.
+    var hasId = (data['ID'] !== undefined && String(data['ID']).trim() !== '');
+    var keyHeader = hasId ? 'ID' : 'Email';
+    var keyCol = col[keyHeader];
+    var keyVal = String(data[keyHeader] || '').trim().toLowerCase();
+
     var rowNum = 0;
-    var email = String(data['Email'] || '').trim().toLowerCase();
-    if (emailCol && email && sheet.getLastRow() >= 2) {
-      var col_vals = sheet.getRange(2, emailCol, sheet.getLastRow() - 1, 1).getValues();
-      for (var r = 0; r < col_vals.length; r++) {
-        if (String(col_vals[r][0]).trim().toLowerCase() === email) { rowNum = r + 2; break; }
+    if (keyCol && keyVal && sheet.getLastRow() >= 2) {
+      var vals = sheet.getRange(2, keyCol, sheet.getLastRow() - 1, 1).getValues();
+      for (var r = 0; r < vals.length; r++) {
+        if (String(vals[r][0]).trim().toLowerCase() === keyVal) { rowNum = r + 2; break; }
       }
     }
 
     var isNew = (rowNum === 0);
-
-    // Build the full row: start from the existing row (update) or blanks (insert),
-    // then overlay every provided column. One setValues write keeps it fast.
     var width = headers.length;
     var rowVals;
     if (isNew) {
       rowNum = sheet.getLastRow() + 1;
       rowVals = [];
       for (var c = 0; c < width; c++) { rowVals.push(''); }
-      if (idCol) { rowVals[idCol - 1] = _nextId(sheet, idCol); }
+      if (idCol) {
+        rowVals[idCol - 1] = hasId ? data['ID'] : _nextId(sheet, idCol);
+      }
       if (signedCol) { rowVals[signedCol - 1] = _now(ss); }
     } else {
       rowVals = sheet.getRange(rowNum, 1, 1, width).getValues()[0];

@@ -329,9 +329,10 @@ function trh_handle_hand_step1() {
 	wp_set_auth_cookie( $user_id, true );
 	do_action( 'wp_login', $user->user_login, $user );
 
-	// Mirror the new Hand into the "Hand" tab of the Google Sheet (see
+	// Build the profile PDF and mirror the new Hand into the "New Hand" tab (see
 	// inc/sheet.php). Fires here at step 1 so a Hand who stops before finishing
-	// is still captured; steps 2 and 3 update the same row. Fail-soft.
+	// is still captured; steps 2 and 3 rebuild the PDF and update the same row.
+	trh_store_profile_pdf( $post_id );
 	trh_mirror_hand( $post_id );
 
 	trh_notify_admin_new_hand( $post_id, 'started' );
@@ -426,7 +427,9 @@ function trh_handle_hand_step2() {
 		trh_signup_fail( 2, $errors );
 	}
 
-	// Update the Sheet row with the resume, photo, socials, and references.
+	// Rebuild the PDF with the resume, photo, socials, and references, then update
+	// the Sheet row.
+	trh_store_profile_pdf( $post_id );
 	trh_mirror_hand( $post_id );
 
 	wp_safe_redirect( trh_signup_after_url( 3 ) );
@@ -478,9 +481,9 @@ function trh_handle_hand_step3() {
 	update_post_meta( $post_id, 'trh_signup_step', 3 );
 	$score = trh_recalculate_trust_score( $post_id );
 
-	// Compile the checked experience into a PDF, then update the Sheet row (its
-	// "Experience" column links to that PDF) with the experience/years just added.
-	trh_store_experience_pdf( $post_id );
+	// Rebuild the profile PDF with the experience/note just added, then update
+	// the Sheet row (its "User Info" column links to that PDF).
+	trh_store_profile_pdf( $post_id );
 	trh_mirror_hand( $post_id );
 
 	if ( ! $already_complete ) {
@@ -662,15 +665,17 @@ function trh_opaque_filename( $dir, $name, $ext ) {
 }
 
 /* -------------------------------------------------------------------------
- * Experience PDF
+ * Profile PDF
  *
- * Step 3's checklist is compiled into a tidy, grouped PDF stored as an
- * attachment on the profile; its URL goes into the sheet's "Experience" column.
+ * The whole Hand profile (contact details, links, socials, references,
+ * experience checklist, and the free-form note) is compiled into one PDF stored
+ * as an attachment on the profile and named "<username>-<ID>.pdf". Its link is
+ * the only Hand detail that goes into the sheet (the "User Info" column).
  * ---------------------------------------------------------------------- */
 
-/** Public URL of the profile's experience PDF, or '' if none yet. */
-function trh_hand_experience_pdf_url( $post_id ) {
-	$attachment_id = (int) trh_hand_field( $post_id, 'experience_pdf_id' );
+/** Public URL of the profile PDF, or '' if none yet. */
+function trh_hand_profile_pdf_url( $post_id ) {
+	$attachment_id = (int) trh_hand_field( $post_id, 'profile_pdf_id' );
 	if ( ! $attachment_id ) {
 		return '';
 	}
@@ -678,76 +683,162 @@ function trh_hand_experience_pdf_url( $post_id ) {
 	return $url ? $url : '';
 }
 
-/**
- * Build (or rebuild) the experience PDF from the profile's checked items,
- * grouped by category, and store it as a PDF attachment on the profile.
- * Idempotent: the previous PDF is replaced. Returns the new URL, or '' on
- * failure or when nothing is checked.
- */
-function trh_store_experience_pdf( $post_id ) {
-	$selected = trh_hand_experience( $post_id );
-	if ( empty( $selected ) ) {
-		return '';
-	}
+/** Strip protocol / www / trailing slash for a compact display of a link. */
+function trh_pretty_url( $url ) {
+	$url = preg_replace( '#^https?://#i', '', (string) $url );
+	$url = preg_replace( '#^www\.#i', '', $url );
+	return rtrim( $url, '/' );
+}
 
+/**
+ * Build (or rebuild) the full profile PDF from everything on the profile and
+ * store it as a "<username>-<ID>.pdf" attachment. Idempotent: the previous PDF
+ * is deleted first so the filename stays stable. Returns the new URL, or ''.
+ */
+function trh_store_profile_pdf( $post_id ) {
 	require_once get_template_directory() . '/inc/lib/trh-pdf.php';
 
-	$name     = trh_hand_name( $post_id );
-	$years    = (int) trh_hand_field( $post_id, 'experience_years' );
+	$first    = trh_hand_field( $post_id, 'first_name' );
+	$last     = trh_hand_field( $post_id, 'last_name' );
+	$name     = trim( $first . ' ' . $last );
+	if ( '' === $name ) {
+		$name = trh_hand_name( $post_id );
+	}
+	$username = trh_hand_field( $post_id, 'username' );
+	$email    = trh_hand_field( $post_id, 'email' );
+	$phone    = trh_hand_field( $post_id, 'phone' );
+	$city     = trh_hand_field( $post_id, 'city' );
+	$state    = trh_hand_field( $post_id, 'state' );
+	$zip      = trh_hand_field( $post_id, 'zip' );
 	$location = trh_hand_field( $post_id, 'location' );
+	$years    = (int) trh_hand_field( $post_id, 'experience_years' );
+	$photo    = get_the_post_thumbnail_url( $post_id, 'full' );
+	$resume   = trh_hand_resume_url( $post_id );
+	$socials  = trh_hand_socials( $post_id );
+	$refs     = array_values( trh_hand_references( $post_id ) );
+	$selected = trh_hand_experience( $post_id );
+	$about    = trim( wp_strip_all_tags( (string) get_post_field( 'post_content', $post_id ) ) );
 
 	$pdf = new TRH_Simple_PDF();
-	$pdf->title( $name . ' — Experience' );
 
-	$subtitle = 'Ranch Hand';
+	// Header. \xC2\xB7 is a middle dot, \xE2\x80\xA2 a bullet (UTF-8 bytes).
+	$pdf->title( ( '' !== $name ? $name : 'Ranch Hand' ) . "  \xC2\xB7  #" . $post_id );
+	$meta = 'Ranch Hand';
 	if ( $years >= 1 ) {
-		$subtitle .= ' • ' . $years . ' ' . ( 1 === $years ? 'year' : 'years' ) . ' experience';
+		$meta .= " \xE2\x80\xA2 " . $years . ' ' . ( 1 === $years ? 'year' : 'years' ) . ' experience';
 	}
 	if ( $location ) {
-		$subtitle .= ' • ' . $location;
+		$meta .= " \xE2\x80\xA2 " . $location;
 	}
-	$pdf->paragraph( $subtitle );
-	$pdf->space( 6 );
+	$pdf->meta( $meta );
+	$pdf->meta( 'Generated by The Ranch Hand on ' . date_i18n( 'F j, Y' ) . '.' );
 
-	$checked = array_flip( $selected );
-	foreach ( trh_experience_groups() as $group_name => $group ) {
-		$hits = array();
-		foreach ( $group['items'] as $key => $label ) {
-			if ( isset( $checked[ $key ] ) ) {
-				$hits[] = $label;
+	// Contact.
+	$pdf->name( $name );
+	if ( $email ) {
+		$pdf->field( 'Email', $email );
+	}
+	if ( $phone ) {
+		$pdf->field( 'Phone Number', $phone );
+	}
+	$loc_line = trim( $city . ( $state ? ', ' . $state : '' ) . ( $zip ? ' ' . $zip : '' ) );
+	if ( '' === $loc_line ) {
+		$loc_line = $location;
+	}
+	if ( $loc_line ) {
+		$pdf->field( 'Location', $loc_line );
+	}
+	$pdf->space( 4 );
+	if ( $username ) {
+		$pdf->field( 'Username', $username );
+	}
+	if ( $photo ) {
+		$pdf->field_link( 'Profile Picture', $photo, 'View picture' );
+	}
+	if ( $resume ) {
+		$pdf->field_link( 'Resume', $resume, 'View resume' );
+	}
+
+	// Socials, in the checklist's defined order.
+	$social_rows = array();
+	foreach ( trh_social_networks() as $key => $net ) {
+		if ( ! empty( $socials[ $key ] ) ) {
+			$social_rows[] = array( $net['label'], $socials[ $key ] );
+		}
+	}
+	if ( $social_rows ) {
+		$pdf->section( 'Socials' );
+		foreach ( $social_rows as $row ) {
+			$pdf->field_link( $row[0], $row[1], trh_pretty_url( $row[1] ) );
+		}
+	}
+
+	// References.
+	if ( $refs ) {
+		$pdf->section( 'References' );
+		$i = 0;
+		foreach ( $refs as $ref ) {
+			$i++;
+			$pdf->field( "Reference {$i} Name", isset( $ref['name'] ) ? $ref['name'] : '' );
+			if ( ! empty( $ref['relationship'] ) ) {
+				$pdf->field( "Reference {$i} Relationship", $ref['relationship'] );
 			}
-		}
-		if ( empty( $hits ) ) {
-			continue;
-		}
-		$pdf->heading( $group_name );
-		foreach ( $hits as $label ) {
-			$pdf->item( $label );
+			if ( ! empty( $ref['phone'] ) ) {
+				$pdf->field( "Reference {$i} Phone", $ref['phone'] );
+			}
+			if ( ! empty( $ref['email'] ) ) {
+				$pdf->field( "Reference {$i} Email", $ref['email'] );
+			}
+			$pdf->space( 3 );
 		}
 	}
 
-	// The free-form "Anything else owners should know" note (step 3), stored as
-	// the profile's post content.
-	$about = trim( wp_strip_all_tags( (string) get_post_field( 'post_content', $post_id ) ) );
+	// Experience checklist, grouped.
+	if ( $selected ) {
+		$pdf->section( 'Experience' );
+		$checked = array_flip( $selected );
+		foreach ( trh_experience_groups() as $group_name => $group ) {
+			$hits = array();
+			foreach ( $group['items'] as $key => $label ) {
+				if ( isset( $checked[ $key ] ) ) {
+					$hits[] = $label;
+				}
+			}
+			if ( ! $hits ) {
+				continue;
+			}
+			$pdf->group( $group_name );
+			$pdf->body( '- ' . implode( ' - ', $hits ), 14 );
+		}
+	}
+
+	// Free-form "Anything else owners should know" note.
 	if ( '' !== $about ) {
-		$pdf->heading( 'Anything else owners should know' );
+		$pdf->section( 'Additional info' );
 		$pdf->body( $about );
 	}
 
-	$pdf->space( 10 );
-	$pdf->paragraph( 'Generated by The Ranch Hand on ' . date_i18n( 'F j, Y' ) . '.' );
+	$bytes = $pdf->output();
 
-	$filename = 'experience-' . $post_id . '-' . time() . '.pdf';
-	$upload   = wp_upload_bits( $filename, null, $pdf->output() );
+	// Delete the old PDF first so the stable "<username>-<ID>.pdf" name is free.
+	$previous = (int) trh_hand_field( $post_id, 'profile_pdf_id' );
+	if ( $previous ) {
+		wp_delete_attachment( $previous, true );
+		delete_post_meta( $post_id, 'trh_profile_pdf_id' );
+	}
+
+	$base     = $username ? $username : ( 'hand-' . $post_id );
+	$filename = sanitize_file_name( $base . '-' . $post_id . '.pdf' );
+	$upload   = wp_upload_bits( $filename, null, $bytes );
 	if ( ! empty( $upload['error'] ) || empty( $upload['file'] ) ) {
-		error_log( '[The Ranch Hand] Experience PDF save failed: ' . ( isset( $upload['error'] ) ? $upload['error'] : 'unknown' ) );
+		error_log( '[The Ranch Hand] Profile PDF save failed: ' . ( isset( $upload['error'] ) ? $upload['error'] : 'unknown' ) );
 		return '';
 	}
 
 	$attachment_id = wp_insert_attachment(
 		array(
 			'post_mime_type' => 'application/pdf',
-			'post_title'     => $name . ' experience',
+			'post_title'     => $name . ' — Ranch Hand profile',
 			'post_status'    => 'inherit',
 			'post_author'    => (int) trh_hand_field( $post_id, 'user_id' ),
 		),
@@ -762,74 +853,38 @@ function trh_store_experience_pdf( $post_id ) {
 
 	require_once ABSPATH . 'wp-admin/includes/image.php';
 	wp_update_attachment_metadata( $attachment_id, wp_generate_attachment_metadata( $attachment_id, $upload['file'] ) );
-
-	// Swap in the new PDF, then delete the old one it replaces.
-	$previous = (int) trh_hand_field( $post_id, 'experience_pdf_id' );
-	update_post_meta( $post_id, 'trh_experience_pdf_id', $attachment_id );
-	if ( $previous && $previous !== $attachment_id ) {
-		wp_delete_attachment( $previous, true );
-	}
+	update_post_meta( $post_id, 'trh_profile_pdf_id', $attachment_id );
 
 	return wp_get_attachment_url( $attachment_id );
 }
 
 /* -------------------------------------------------------------------------
- * Google Sheet mirror ("Hand" tab)
+ * Google Sheet mirror ("New Hand" tab)
+ *
+ * Every profile detail now lives in the profile PDF, so the sheet keeps only
+ * enough to find a person and open their PDF: ID (the WordPress post ID, which
+ * also names the PDF and titles it), First Name, Last Name, Username, and
+ * User Info (a link to the PDF). The Apps Script keys the row on ID.
  * ---------------------------------------------------------------------- */
 
 /**
- * Build the "Hand" tab row from the profile as it stands right now, keyed by the
- * exact column headers on that tab. Empty values are dropped downstream (see
- * trh_mirror_to_sheet), so a later step never blanks a column an earlier one
- * filled. The Password column is intentionally never sent: WordPress stores only
- * a one-way hash, and a plaintext copy in a shared sheet would be a liability.
+ * The "New Hand" row for a profile: identity columns plus a link to the PDF.
  *
  * @return array Column header => value.
  */
 function trh_hand_sheet_row( $post_id ) {
-	$socials = trh_hand_socials( $post_id );
-	$refs    = array_values( trh_hand_references( $post_id ) );
-	$photo   = get_the_post_thumbnail_url( $post_id, 'full' );
-	$years   = trh_hand_field( $post_id, 'experience_years' );
-
-	$row = array(
-		'First Name'      => trh_hand_field( $post_id, 'first_name' ),
-		'Last Name'       => trh_hand_field( $post_id, 'last_name' ),
-		'Phone Number'    => trh_hand_field( $post_id, 'phone' ),
-		'Email'           => trh_hand_field( $post_id, 'email' ),
-		'City or Town'    => trh_hand_field( $post_id, 'city' ),
-		'State'           => trh_hand_field( $post_id, 'state' ),
-		'Zip'             => trh_hand_field( $post_id, 'zip' ),
-		'Username'        => trh_hand_field( $post_id, 'username' ),
-		'Profile Picture' => trh_sheet_link( $photo ? $photo : '', 'Profile Picture' ),
-		'Resume'          => trh_sheet_link( trh_hand_resume_url( $post_id ), 'Resume' ),
-		'Instagram Link'  => trh_sheet_link( isset( $socials['instagram'] ) ? $socials['instagram'] : '', 'Instagram' ),
-		'Facebook Link'   => trh_sheet_link( isset( $socials['facebook'] ) ? $socials['facebook'] : '', 'Facebook' ),
-		'TikTok Link'     => trh_sheet_link( isset( $socials['tiktok'] ) ? $socials['tiktok'] : '', 'TikTok' ),
-		'YouTube Link'    => trh_sheet_link( isset( $socials['youtube'] ) ? $socials['youtube'] : '', 'YouTube' ),
-		'LinkedIn Link'   => trh_sheet_link( isset( $socials['linkedin'] ) ? $socials['linkedin'] : '', 'LinkedIn' ),
-		'Website Link'    => trh_sheet_link( isset( $socials['website'] ) ? $socials['website'] : '', 'Website' ),
-		'Years Working'   => ( '' !== $years ) ? (string) (int) $years : '',
-		'Experience'      => trh_sheet_link( trh_hand_experience_pdf_url( $post_id ), 'Experience PDF' ),
-		'Role'            => 'caretaker',
-		'Location'        => trh_hand_field( $post_id, 'location' ),
+	return array(
+		'ID'         => (string) (int) $post_id,
+		'First Name' => trh_hand_field( $post_id, 'first_name' ),
+		'Last Name'  => trh_hand_field( $post_id, 'last_name' ),
+		'Username'   => trh_hand_field( $post_id, 'username' ),
+		'User Info'  => trh_sheet_link( trh_hand_profile_pdf_url( $post_id ), 'View Profile' ),
 	);
-
-	foreach ( array( 0, 1, 2 ) as $i ) {
-		$n   = $i + 1;
-		$ref = ( isset( $refs[ $i ] ) && is_array( $refs[ $i ] ) ) ? $refs[ $i ] : array();
-		$row[ "Reference {$n} Name" ]          = isset( $ref['name'] ) ? $ref['name'] : '';
-		$row[ "Reference {$n} How They Know" ] = isset( $ref['relationship'] ) ? $ref['relationship'] : '';
-		$row[ "Reference {$n} Phone" ]         = isset( $ref['phone'] ) ? $ref['phone'] : '';
-		$row[ "Reference {$n} Email" ]         = isset( $ref['email'] ) ? $ref['email'] : '';
-	}
-
-	return $row;
 }
 
-/** Push the current state of a Hand profile into the Sheet's "Hand" tab. */
+/** Push the current state of a Hand profile into the Sheet's "New Hand" tab. */
 function trh_mirror_hand( $post_id ) {
-	trh_mirror_to_sheet( 'Hand', trh_hand_sheet_row( $post_id ) );
+	trh_mirror_to_sheet( 'New Hand', trh_hand_sheet_row( $post_id ) );
 }
 
 /* -------------------------------------------------------------------------

@@ -81,8 +81,8 @@ function trh_mirror_to_sheet( $tab, $row ) {
 			return '' !== $v && null !== $v;
 		}
 	);
-	if ( empty( $row['Email'] ) ) {
-		return; // Email is the row key; nothing to match or insert on without it.
+	if ( empty( $row['ID'] ) && empty( $row['Email'] ) ) {
+		return; // The Apps Script matches on ID (Hand) or Email (Ranch); need one.
 	}
 
 	$response = wp_remote_post(
