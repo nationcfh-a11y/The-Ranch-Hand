@@ -37,30 +37,43 @@ function trh_sheet_token() {
 }
 
 /**
- * Append one signup row to the sheet. Fail-soft: any error is logged and
- * swallowed so the visitor still gets their thank-you. The Lead saved in
- * wp-admin remains the record of truth if this never lands.
+ * Upsert one row into a tab of the sheet. The $row is keyed by the EXACT column
+ * header names on that tab; the Apps Script matches an existing row by the
+ * "Email" value (so the multi-step Hand signup fills one row as it progresses)
+ * and otherwise appends. "ID" and "Signed Up" are managed by the script.
  *
- * @param array $row name, email, role, location, search_radius.
+ * Empty values are dropped before sending, so a later step can never blank a
+ * column an earlier step already filled. Fail-soft: any error is logged and
+ * swallowed. The wp-admin record (Lead or Hand profile) is the source of truth.
+ *
+ * @param string $tab 'Ranch' or 'Hand'.
+ * @param array  $row Column header => value.
  */
-function trh_mirror_signup_to_sheet( $row ) {
+function trh_mirror_to_sheet( $tab, $row ) {
 	$url = trh_sheet_webhook_url();
 	if ( ! $url ) {
-		return; // Mirror not set up yet; the Lead is already saved.
+		return; // Mirror not set up yet; the wp-admin record is already saved.
+	}
+
+	$row = array_filter(
+		$row,
+		static function ( $v ) {
+			return '' !== $v && null !== $v;
+		}
+	);
+	if ( empty( $row['Email'] ) ) {
+		return; // Email is the row key; nothing to match or insert on without it.
 	}
 
 	$response = wp_remote_post(
 		$url,
 		array(
-			'timeout'     => 8,
+			'timeout'     => 10,
 			'redirection' => 5, // Apps Script /exec answers via a 302 to script.googleusercontent.com.
 			'body'        => array(
-				'token'         => trh_sheet_token(),
-				'name'          => isset( $row['name'] ) ? $row['name'] : '',
-				'email'         => isset( $row['email'] ) ? $row['email'] : '',
-				'role'          => isset( $row['role'] ) ? $row['role'] : '',
-				'location'      => isset( $row['location'] ) ? $row['location'] : '',
-				'search_radius' => isset( $row['search_radius'] ) ? $row['search_radius'] : '',
+				'token'   => trh_sheet_token(),
+				'tab'     => $tab,
+				'payload' => wp_json_encode( $row ),
 			),
 		)
 	);

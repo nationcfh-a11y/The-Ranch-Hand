@@ -331,16 +331,8 @@ function trh_handle_hand_step1() {
 
 	// Mirror the new Hand into the "Hand" tab of the Google Sheet (see
 	// inc/sheet.php). Fires here at step 1 so a Hand who stops before finishing
-	// is still captured. Fail-soft: the WordPress account stays the record of
-	// truth, and role 'caretaker' routes the row to the Hand tab.
-	trh_mirror_signup_to_sheet(
-		array(
-			'name'     => $name,
-			'email'    => $values['email'],
-			'role'     => 'caretaker',
-			'location' => $location,
-		)
-	);
+	// is still captured; steps 2 and 3 update the same row. Fail-soft.
+	trh_mirror_hand( $post_id );
 
 	trh_notify_admin_new_hand( $post_id, 'started' );
 	trh_email_hand_welcome( $post_id );
@@ -434,6 +426,9 @@ function trh_handle_hand_step2() {
 		trh_signup_fail( 2, $errors );
 	}
 
+	// Update the Sheet row with the resume, photo, socials, and references.
+	trh_mirror_hand( $post_id );
+
 	wp_safe_redirect( trh_signup_after_url( 3 ) );
 	exit;
 }
@@ -482,6 +477,9 @@ function trh_handle_hand_step3() {
 	$already_complete = trh_hand_is_complete( $post_id );
 	update_post_meta( $post_id, 'trh_signup_step', 3 );
 	$score = trh_recalculate_trust_score( $post_id );
+
+	// Update the Sheet row with the experience/years the Hand just added.
+	trh_mirror_hand( $post_id );
 
 	if ( ! $already_complete ) {
 		trh_notify_admin_new_hand( $post_id, 'completed' );
@@ -659,6 +657,64 @@ function trh_store_hand_upload( $field, $kind, $post_id ) {
  */
 function trh_opaque_filename( $dir, $name, $ext ) {
 	return 'rh-' . wp_generate_password( 20, false, false ) . $ext;
+}
+
+/* -------------------------------------------------------------------------
+ * Google Sheet mirror ("Hand" tab)
+ * ---------------------------------------------------------------------- */
+
+/**
+ * Build the "Hand" tab row from the profile as it stands right now, keyed by the
+ * exact column headers on that tab. Empty values are dropped downstream (see
+ * trh_mirror_to_sheet), so a later step never blanks a column an earlier one
+ * filled. The Password column is intentionally never sent: WordPress stores only
+ * a one-way hash, and a plaintext copy in a shared sheet would be a liability.
+ *
+ * @return array Column header => value.
+ */
+function trh_hand_sheet_row( $post_id ) {
+	$socials = trh_hand_socials( $post_id );
+	$refs    = array_values( trh_hand_references( $post_id ) );
+	$photo   = get_the_post_thumbnail_url( $post_id, 'full' );
+	$years   = trh_hand_field( $post_id, 'experience_years' );
+
+	$row = array(
+		'First Name'      => trh_hand_field( $post_id, 'first_name' ),
+		'Last Name'       => trh_hand_field( $post_id, 'last_name' ),
+		'Phone Number'    => trh_hand_field( $post_id, 'phone' ),
+		'Email'           => trh_hand_field( $post_id, 'email' ),
+		'City or Town'    => trh_hand_field( $post_id, 'city' ),
+		'State'           => trh_hand_field( $post_id, 'state' ),
+		'Zip'             => trh_hand_field( $post_id, 'zip' ),
+		'Username'        => trh_hand_field( $post_id, 'username' ),
+		'Profile Picture' => $photo ? $photo : '',
+		'Resume'          => trh_hand_resume_url( $post_id ),
+		'Instagram Link'  => isset( $socials['instagram'] ) ? $socials['instagram'] : '',
+		'Facebook Link'   => isset( $socials['facebook'] ) ? $socials['facebook'] : '',
+		'TikTok Link'     => isset( $socials['tiktok'] ) ? $socials['tiktok'] : '',
+		'YouTube Link'    => isset( $socials['youtube'] ) ? $socials['youtube'] : '',
+		'LinkedIn Link'   => isset( $socials['linkedin'] ) ? $socials['linkedin'] : '',
+		'Website Link'    => isset( $socials['website'] ) ? $socials['website'] : '',
+		'Years Working'   => ( '' !== $years ) ? (string) (int) $years : '',
+		'Role'            => 'caretaker',
+		'Location'        => trh_hand_field( $post_id, 'location' ),
+	);
+
+	foreach ( array( 0, 1, 2 ) as $i ) {
+		$n   = $i + 1;
+		$ref = ( isset( $refs[ $i ] ) && is_array( $refs[ $i ] ) ) ? $refs[ $i ] : array();
+		$row[ "Reference {$n} Name" ]          = isset( $ref['name'] ) ? $ref['name'] : '';
+		$row[ "Reference {$n} How They Know" ] = isset( $ref['relationship'] ) ? $ref['relationship'] : '';
+		$row[ "Reference {$n} Phone" ]         = isset( $ref['phone'] ) ? $ref['phone'] : '';
+		$row[ "Reference {$n} Email" ]         = isset( $ref['email'] ) ? $ref['email'] : '';
+	}
+
+	return $row;
+}
+
+/** Push the current state of a Hand profile into the Sheet's "Hand" tab. */
+function trh_mirror_hand( $post_id ) {
+	trh_mirror_to_sheet( 'Hand', trh_hand_sheet_row( $post_id ) );
 }
 
 /* -------------------------------------------------------------------------

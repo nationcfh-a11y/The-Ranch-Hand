@@ -91,14 +91,16 @@ function trh_handle_lead() {
 
 	// Ranch signups also flow into the "Ranch" tab of the Google Sheet. Fail-soft
 	// (see inc/sheet.php): the Lead above stays the record of truth regardless.
+	// Keys are the Ranch tab's column headers.
 	if ( $is_ranch ) {
-		trh_mirror_signup_to_sheet(
+		trh_mirror_to_sheet(
+			'Ranch',
 			array(
-				'name'          => $name,
-				'email'         => $email,
-				'role'          => 'owner',
-				'location'      => $location,
-				'search_radius' => $search_radius,
+				'Full Name'          => $name,
+				'Email'              => $email,
+				'Role'               => 'owner',
+				'Location'           => $location,
+				'Search Radius (mi)' => ( '' !== $search_radius ) ? (string) $search_radius : '',
 			)
 		);
 	}
