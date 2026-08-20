@@ -329,6 +329,19 @@ function trh_handle_hand_step1() {
 	wp_set_auth_cookie( $user_id, true );
 	do_action( 'wp_login', $user->user_login, $user );
 
+	// Mirror the new Hand into the "Hand" tab of the Google Sheet (see
+	// inc/sheet.php). Fires here at step 1 so a Hand who stops before finishing
+	// is still captured. Fail-soft: the WordPress account stays the record of
+	// truth, and role 'caretaker' routes the row to the Hand tab.
+	trh_mirror_signup_to_sheet(
+		array(
+			'name'     => $name,
+			'email'    => $values['email'],
+			'role'     => 'caretaker',
+			'location' => $location,
+		)
+	);
+
 	trh_notify_admin_new_hand( $post_id, 'started' );
 	trh_email_hand_welcome( $post_id );
 
