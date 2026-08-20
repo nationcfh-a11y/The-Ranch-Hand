@@ -51,7 +51,8 @@ $trh_dir = trh_directory_url();
 		<div>
 			<h4>Company</h4>
 			<ul class="footer-list">
-				<li><a href="<?php echo esc_url( home_url( '/become-a-caretaker/' ) ); ?>">Become a Caretaker</a></li>
+				<li><a href="<?php echo esc_url( trh_page_url( 'ranch-signup' ) ); ?>">Register Your Ranch</a></li>
+					<li><a href="<?php echo esc_url( home_url( '/become-a-caretaker/' ) ); ?>">Become a Caretaker</a></li>
 				<li><a href="<?php echo esc_url( $trh_dir ); ?>">Find a Sitter</a></li>
 				<?php if ( has_nav_menu( 'footer_company' ) ) : ?>
 					<?php

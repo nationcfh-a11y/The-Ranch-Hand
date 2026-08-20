@@ -9,11 +9,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'TRH_VERSION', '1.1.2' );
+define( 'TRH_VERSION', '1.1.3' );
 
 require get_template_directory() . '/inc/cpt.php';
 require get_template_directory() . '/inc/seed.php';
 require get_template_directory() . '/inc/forms.php';
+require get_template_directory() . '/inc/sheet.php';
 require get_template_directory() . '/inc/pages.php';
 require get_template_directory() . '/inc/hands.php';
 require get_template_directory() . '/inc/hand-signup.php';
@@ -104,6 +105,31 @@ function trh_customize( $wp_customize ) {
 			)
 		);
 	}
+
+	// Integrations: where ranch signups are mirrored (see inc/sheet.php).
+	$wp_customize->add_section( 'trh_integrations', array( 'title' => 'Ranch Hand: Integrations', 'priority' => 31 ) );
+
+	$wp_customize->add_setting( 'trh_sheet_webhook', array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
+	$wp_customize->add_control(
+		'trh_sheet_webhook',
+		array(
+			'label'       => 'Google Sheet webhook URL',
+			'description' => 'The Apps Script Web App /exec URL that appends signups to the "The Ranch Hand Users" sheet. See docs/ranch-sheet-apps-script.gs.',
+			'section'     => 'trh_integrations',
+			'type'        => 'url',
+		)
+	);
+
+	$wp_customize->add_setting( 'trh_sheet_token', array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ) );
+	$wp_customize->add_control(
+		'trh_sheet_token',
+		array(
+			'label'       => 'Sheet secret token (optional)',
+			'description' => 'If you set SHARED_TOKEN in the Apps Script, paste the same value here.',
+			'section'     => 'trh_integrations',
+			'type'        => 'text',
+		)
+	);
 }
 
 function trh_opt( $key, $fallback = '' ) {

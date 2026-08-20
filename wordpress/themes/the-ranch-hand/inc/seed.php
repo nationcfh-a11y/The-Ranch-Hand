@@ -14,35 +14,44 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 add_action( 'after_setup_theme', 'trh_ensure_pages' );
 /**
- * Ensure the "Become a Caretaker" page (slug become-a-caretaker) exists so
- * page-become-a-caretaker.php resolves and the "Become A Hand" nav link does
- * not 404.
+ * Ensure the pages the nav links to exist, so their templates resolve and the
+ * links do not 404:
+ *   - become-a-caretaker -> page-become-a-caretaker.php ("Become A Hand")
+ *   - ranch-signup       -> page-ranch-signup.php ("Register Your Ranch")
  *
  * This runs on after_setup_theme behind an option guard rather than on
  * after_switch_theme: the theme is already active on the live site, so
- * after_switch_theme never fires again and the page would never be created on a
- * plain deploy. Same pattern (and same reason) as inc/pages.php and the hand
- * pages in inc/hands.php. Bump the option key (_v2) if it ever needs re-creating.
+ * after_switch_theme never fires again and the pages would never be created on
+ * a plain deploy. Same pattern (and same reason) as inc/pages.php and the hand
+ * pages in inc/hands.php. Bump the option key (_v3) if these ever need
+ * re-creating.
  */
 function trh_ensure_pages() {
-	if ( get_option( 'trh_caretaker_page_v1' ) ) {
+	if ( get_option( 'trh_theme_pages_v2' ) ) {
 		return;
 	}
 
-	$existing = get_page_by_path( 'become-a-caretaker' );
-	if ( ! $existing ) {
+	$pages = array(
+		'become-a-caretaker' => 'Become a Caretaker',
+		'ranch-signup'       => 'Register Your Ranch',
+	);
+
+	foreach ( $pages as $slug => $title ) {
+		if ( get_page_by_path( $slug, OBJECT, 'page' ) ) {
+			continue; // Already there (never clobber an edited page).
+		}
 		wp_insert_post(
 			array(
 				'post_type'    => 'page',
 				'post_status'  => 'publish',
-				'post_title'   => 'Become a Caretaker',
-				'post_name'    => 'become-a-caretaker',
+				'post_title'   => $title,
+				'post_name'    => $slug,
 				'post_content' => '', // content comes from the page template
 			)
 		);
 	}
 
-	update_option( 'trh_caretaker_page_v1', 1 );
+	update_option( 'trh_theme_pages_v2', 1 );
 }
 
 add_action( 'after_switch_theme', 'trh_seed_caretakers' );
