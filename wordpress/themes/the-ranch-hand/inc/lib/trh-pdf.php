@@ -79,6 +79,36 @@ class TRH_Simple_PDF {
 		$this->y -= $height;
 	}
 
+	/**
+	 * Draw free-form text at body size, wrapping long lines on word boundaries
+	 * and honoring the author's own line breaks. Conservative character-count
+	 * wrapping (no font metrics needed) that comfortably fits the text column.
+	 */
+	public function body( $text, $max_chars = 95 ) {
+		$text  = str_replace( array( "\r\n", "\r" ), "\n", (string) $text );
+		$lines = explode( "\n", $text );
+		foreach ( $lines as $raw ) {
+			$raw = rtrim( $raw );
+			if ( '' === $raw ) {
+				$this->space( 8 ); // blank line = paragraph gap
+				continue;
+			}
+			$line = '';
+			foreach ( preg_split( '/\s+/', $raw ) as $word ) {
+				$candidate = ( '' === $line ) ? $word : $line . ' ' . $word;
+				if ( strlen( $candidate ) > $max_chars && '' !== $line ) {
+					$this->draw( $line, 11, $this->left, 15 );
+					$line = $word;
+				} else {
+					$line = $candidate;
+				}
+			}
+			if ( '' !== $line ) {
+				$this->draw( $line, 11, $this->left, 15 );
+			}
+		}
+	}
+
 	/** Down-convert to WinAnsi and escape the three PDF string metacharacters. */
 	private function escape( $text ) {
 		$text = (string) $text;
