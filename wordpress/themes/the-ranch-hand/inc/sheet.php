@@ -37,6 +37,26 @@ function trh_sheet_token() {
 }
 
 /**
+ * Wrap a URL as a Google Sheets =HYPERLINK() formula so the cell shows a short
+ * label instead of a long URL, while staying clickable. Returns '' for an empty
+ * URL (so the mirror drops it). The Apps Script writes any value beginning with
+ * '=' as a formula, so nothing is needed on that side.
+ *
+ * @param string $url   Destination URL.
+ * @param string $label Text to display in the cell.
+ */
+function trh_sheet_link( $url, $label ) {
+	$url = trim( (string) $url );
+	if ( '' === $url ) {
+		return '';
+	}
+	// A stray double quote would break the formula string; URLs never contain one.
+	$url   = str_replace( '"', '', $url );
+	$label = str_replace( '"', '', $label );
+	return '=HYPERLINK("' . $url . '", "' . $label . '")';
+}
+
+/**
  * Upsert one row into a tab of the sheet. The $row is keyed by the EXACT column
  * header names on that tab; the Apps Script matches an existing row by the
  * "Email" value (so the multi-step Hand signup fills one row as it progresses)
