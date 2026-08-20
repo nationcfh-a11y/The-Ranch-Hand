@@ -12,13 +12,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-add_action( 'after_switch_theme', 'trh_ensure_pages' );
+add_action( 'after_setup_theme', 'trh_ensure_pages' );
 /**
- * Ensure the pages the nav links to exist. Creates the "Become a Caretaker"
- * page (slug become-a-caretaker) so page-become-a-caretaker.php resolves, and
- * makes sure the front page shows the homepage.
+ * Ensure the "Become a Caretaker" page (slug become-a-caretaker) exists so
+ * page-become-a-caretaker.php resolves and the "Become A Hand" nav link does
+ * not 404.
+ *
+ * This runs on after_setup_theme behind an option guard rather than on
+ * after_switch_theme: the theme is already active on the live site, so
+ * after_switch_theme never fires again and the page would never be created on a
+ * plain deploy. Same pattern (and same reason) as inc/pages.php and the hand
+ * pages in inc/hands.php. Bump the option key (_v2) if it ever needs re-creating.
  */
 function trh_ensure_pages() {
+	if ( get_option( 'trh_caretaker_page_v1' ) ) {
+		return;
+	}
+
 	$existing = get_page_by_path( 'become-a-caretaker' );
 	if ( ! $existing ) {
 		wp_insert_post(
@@ -31,6 +41,8 @@ function trh_ensure_pages() {
 			)
 		);
 	}
+
+	update_option( 'trh_caretaker_page_v1', 1 );
 }
 
 add_action( 'after_switch_theme', 'trh_seed_caretakers' );
