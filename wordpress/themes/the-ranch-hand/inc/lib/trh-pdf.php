@@ -33,6 +33,22 @@ class TRH_Simple_PDF {
 	private $page_index = 0;
 	private $links      = array(); // each: page, rect [x1,y1,x2,y2], url
 
+	/** Helvetica glyph widths (per 1000 em) for ASCII 32-126; default 556. */
+	private static $hv = array(
+		32 => 278, 33 => 278, 34 => 355, 35 => 556, 36 => 556, 37 => 889, 38 => 667, 39 => 191,
+		40 => 333, 41 => 333, 42 => 389, 43 => 584, 44 => 278, 45 => 333, 46 => 278, 47 => 278,
+		48 => 556, 49 => 556, 50 => 556, 51 => 556, 52 => 556, 53 => 556, 54 => 556, 55 => 556,
+		56 => 556, 57 => 556, 58 => 278, 59 => 278, 60 => 584, 61 => 584, 62 => 584, 63 => 556,
+		64 => 1015, 65 => 667, 66 => 667, 67 => 722, 68 => 722, 69 => 667, 70 => 611, 71 => 778,
+		72 => 722, 73 => 278, 74 => 500, 75 => 667, 76 => 556, 77 => 833, 78 => 722, 79 => 778,
+		80 => 667, 81 => 778, 82 => 722, 83 => 667, 84 => 611, 85 => 722, 86 => 667, 87 => 944,
+		88 => 667, 89 => 667, 90 => 611, 91 => 278, 92 => 278, 93 => 278, 94 => 469, 95 => 556,
+		96 => 333, 97 => 556, 98 => 556, 99 => 500, 100 => 556, 101 => 556, 102 => 278, 103 => 556,
+		104 => 556, 105 => 222, 106 => 222, 107 => 500, 108 => 222, 109 => 833, 110 => 556, 111 => 556,
+		112 => 556, 113 => 556, 114 => 333, 115 => 500, 116 => 278, 117 => 556, 118 => 500, 119 => 722,
+		120 => 500, 121 => 500, 122 => 500, 123 => 334, 124 => 260, 125 => 334, 126 => 584,
+	);
+
 	public function __construct() {
 		$this->y = $this->page_h - $this->top;
 	}
@@ -42,9 +58,30 @@ class TRH_Simple_PDF {
 		return $this->page_w - $this->left - $this->right;
 	}
 
-	/** Rough width of a string at a font size (average glyph ~0.5 em). */
+	/** WinAnsi bytes of a UTF-8 string (used for both width and drawing). */
+	private function to_winansi( $text ) {
+		$text = (string) $text;
+		if ( function_exists( 'iconv' ) ) {
+			$converted = @iconv( 'UTF-8', 'CP1252//IGNORE', $text );
+			if ( false !== $converted ) {
+				$text = $converted;
+			}
+		} else {
+			$text = preg_replace( '/[^\x20-\x7E]/', '', $text );
+		}
+		return $text;
+	}
+
+	/** Rendered width of a string at a font size, from Helvetica glyph metrics. */
 	private function width_of( $text, $size ) {
-		return strlen( $text ) * $size * 0.5;
+		$text = $this->to_winansi( $text );
+		$w    = 0;
+		$len  = strlen( $text );
+		for ( $i = 0; $i < $len; $i++ ) {
+			$c  = ord( $text[ $i ] );
+			$w += isset( self::$hv[ $c ] ) ? self::$hv[ $c ] : 556;
+		}
+		return $w * $size / 1000;
 	}
 
 	/** Start a new page if the next block would cross the bottom margin. */
@@ -174,15 +211,7 @@ class TRH_Simple_PDF {
 
 	/** Down-convert to WinAnsi and escape PDF string metacharacters. */
 	private function escape( $text ) {
-		$text = (string) $text;
-		if ( function_exists( 'iconv' ) ) {
-			$converted = @iconv( 'UTF-8', 'CP1252//IGNORE', $text );
-			if ( false !== $converted ) {
-				$text = $converted;
-			}
-		} else {
-			$text = preg_replace( '/[^\x20-\x7E]/', '', $text );
-		}
+		$text = $this->to_winansi( $text );
 		return str_replace( array( '\\', '(', ')' ), array( '\\\\', '\\(', '\\)' ), $text );
 	}
 
