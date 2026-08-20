@@ -40,6 +40,14 @@ function trh_setup() {
 	);
 }
 
+/**
+ * Hide the WordPress front-end admin toolbar for everyone, so a logged-in Hand
+ * (or anyone previewing) sees a clean, standalone app rather than the black
+ * "Howdy, ..." WordPress bar. This only affects the public site; admins still
+ * get the full toolbar inside wp-admin, reachable at /wp-admin.
+ */
+add_filter( 'show_admin_bar', '__return_false' );
+
 /* -------------------------------------------------------------------------
  * Styles + fonts
  * ---------------------------------------------------------------------- */
