@@ -56,6 +56,17 @@ function trh_handle_lead() {
 		? absint( wp_unslash( $_POST['search_radius'] ) )
 		: '';
 
+	// Ranch signup extras (empty for the other lead types).
+	$farm_name      = isset( $_POST['farm_name'] ) ? sanitize_text_field( wp_unslash( $_POST['farm_name'] ) ) : '';
+	$acres          = isset( $_POST['acres'] ) ? sanitize_text_field( wp_unslash( $_POST['acres'] ) ) : '';
+	$animals        = trh_lead_checkbox_list( 'animals' );
+	$animal_details = isset( $_POST['animal_details'] ) ? sanitize_textarea_field( wp_unslash( $_POST['animal_details'] ) ) : '';
+	$needs          = trh_lead_checkbox_list( 'needs' );
+	$frequency      = isset( $_POST['frequency'] ) ? sanitize_text_field( wp_unslash( $_POST['frequency'] ) ) : '';
+	$start          = isset( $_POST['start'] ) ? sanitize_text_field( wp_unslash( $_POST['start'] ) ) : '';
+	$looking_for    = isset( $_POST['looking_for'] ) ? sanitize_textarea_field( wp_unslash( $_POST['looking_for'] ) ) : '';
+	$notes          = isset( $_POST['notes'] ) ? sanitize_textarea_field( wp_unslash( $_POST['notes'] ) ) : '';
+
 	if ( empty( $name ) || empty( $email ) || ! is_email( $email ) ) {
 		trh_redirect_back( 'invalid' );
 	}
@@ -82,7 +93,11 @@ function trh_handle_lead() {
 		)
 	);
 	if ( $lead_id && ! is_wp_error( $lead_id ) ) {
-		foreach ( compact( 'type', 'name', 'email', 'phone', 'location', 'service', 'dates', 'caretaker', 'message', 'search_radius' ) as $k => $v ) {
+		$fields = compact(
+			'type', 'name', 'email', 'phone', 'location', 'service', 'dates', 'caretaker', 'message', 'search_radius',
+			'farm_name', 'acres', 'animals', 'animal_details', 'needs', 'frequency', 'start', 'looking_for', 'notes'
+		);
+		foreach ( $fields as $k => $v ) {
 			if ( '' !== $v ) {
 				update_post_meta( $lead_id, 'trh_' . $k, $v );
 			}
@@ -93,6 +108,8 @@ function trh_handle_lead() {
 	// (see inc/sheet.php): the Lead above stays the record of truth regardless.
 	// Keys are the Ranch tab's column headers.
 	if ( $is_ranch ) {
+		// The extra columns only fill in if you add them to the Ranch tab (the
+		// Apps Script writes by header name and drops keys with no column).
 		trh_mirror_to_sheet(
 			'Ranch',
 			array(
@@ -101,6 +118,16 @@ function trh_handle_lead() {
 				'Role'               => 'owner',
 				'Location'           => $location,
 				'Search Radius (mi)' => ( '' !== $search_radius ) ? (string) $search_radius : '',
+				'Phone'              => $phone,
+				'Ranch Name'         => $farm_name,
+				'Property Size'      => $acres,
+				'Animals'            => $animals,
+				'Animal Details'     => $animal_details,
+				'Care Needed'        => $needs,
+				'How Often'          => $frequency,
+				'Start'              => $start,
+				'Looking For'        => $looking_for,
+				'Notes'              => $notes,
 			)
 		);
 	}
@@ -127,7 +154,17 @@ function trh_handle_lead() {
 	if ( $caretaker )           { $lines[] = 'Sitter:   ' . $caretaker; }
 	if ( $service )             { $lines[] = ( $is_contact ? 'Subject:  ' : 'Service:  ' ) . $service; }
 	if ( $dates )               { $lines[] = 'Dates:    ' . $dates; }
-	if ( $message )             { $lines[] = ''; $lines[] = 'Message:'; $lines[] = $message; }
+	// Ranch-specific answers.
+	if ( $farm_name )      { $lines[] = 'Ranch:    ' . $farm_name; }
+	if ( $acres )          { $lines[] = 'Size:     ' . $acres; }
+	if ( $animals )        { $lines[] = 'Animals:  ' . $animals; }
+	if ( $animal_details ) { $lines[] = 'Animal details: ' . $animal_details; }
+	if ( $needs )          { $lines[] = 'Needs:    ' . $needs; }
+	if ( $frequency )      { $lines[] = 'How often: ' . $frequency; }
+	if ( $start )          { $lines[] = 'Start:    ' . $start; }
+	if ( $looking_for )    { $lines[] = ''; $lines[] = 'Looking for:'; $lines[] = $looking_for; }
+	if ( $notes )          { $lines[] = ''; $lines[] = 'Notes:'; $lines[] = $notes; }
+	if ( $message )        { $lines[] = ''; $lines[] = 'Message:'; $lines[] = $message; }
 
 	wp_mail(
 		get_option( 'admin_email' ),
@@ -137,6 +174,16 @@ function trh_handle_lead() {
 	);
 
 	trh_redirect_back( 'ok' );
+}
+
+/** Sanitize a checkbox-array POST field into a comma-separated string. */
+function trh_lead_checkbox_list( $key ) {
+	if ( empty( $_POST[ $key ] ) || ! is_array( $_POST[ $key ] ) ) {
+		return '';
+	}
+	$values = array_map( 'sanitize_text_field', array_map( 'wp_unslash', $_POST[ $key ] ) );
+	$values = array_filter( array_map( 'trim', $values ) );
+	return implode( ', ', $values );
 }
 
 /** Redirect to the referring page with a status flag the templates read. */
