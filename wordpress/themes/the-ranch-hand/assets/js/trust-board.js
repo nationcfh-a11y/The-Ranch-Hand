@@ -25,7 +25,9 @@
 	if (!numEl || !popEl) return;
 
 	var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-	var POLL_MS = Math.max(10000, cfg.pollMs || 30000);
+	// wp_localize_script hands everything over as a string, so parse rather than
+	// trust it. The floor is only a guard against a filter set absurdly low.
+	var POLL_MS = Math.max(3000, parseInt(cfg.pollMs, 10) || 30000);
 
 	// What the pill is currently showing. The inline primer in the header has
 	// already rewound the text to the watermark, so read it back rather than
