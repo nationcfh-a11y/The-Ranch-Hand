@@ -405,8 +405,12 @@ function trh_trust_earned( $post_id ) {
 }
 
 /**
- * Recalculate and store the Trust Score. Idempotent: derived entirely from the
- * profile, so calling it twice cannot double-award anything.
+ * Recalculate and store the Trust Score.
+ *
+ * Two halves, both idempotent: the signup points are re-derived from the
+ * profile, and the points earned since are summed from the award ledger (see
+ * inc/trust-board.php). Nothing is ever incremented in place, so calling this
+ * twice cannot double-award anything.
  *
  * @return int The stored score.
  */
@@ -422,6 +426,8 @@ function trh_recalculate_trust_score( $post_id ) {
 			$awards[ $key ]   = $component['points'];
 		}
 	}
+
+	$score += trh_trust_ledger_total( $post_id );
 
 	update_post_meta( $post_id, 'trh_trust_score', $score );
 	update_post_meta( $post_id, 'trh_trust_awards', $awards );
@@ -582,11 +588,18 @@ function trh_points_pill( $points, $earned = false ) {
 
 /** Circular Trust Score dial. $size is a CSS length. */
 function trh_trust_dial( $score, $size = '9rem' ) {
-	$max = trh_trust_max();
-	$pct = $max ? min( 100, round( ( (int) $score / $max ) * 100 ) ) : 0;
+	$score = (int) $score;
+	$max   = trh_trust_max();
+	$pct   = $max ? min( 100, round( ( $score / $max ) * 100 ) ) : 0;
+
+	// Awards earned after signup push past the signup maximum. The ring simply
+	// stays full rather than pretending 145 is "out of 130".
+	$label = $score > $max
+		? sprintf( 'Trust Score %d points', $score )
+		: sprintf( 'Trust Score %d out of %d points', $score, $max );
 	?>
 	<div class="score-dial" style="--pct:<?php echo esc_attr( $pct ); ?>;--dial:<?php echo esc_attr( $size ); ?>;" role="img"
-		aria-label="<?php echo esc_attr( sprintf( 'Trust Score %d out of %d points', (int) $score, $max ) ); ?>">
+		aria-label="<?php echo esc_attr( $label ); ?>">
 		<div class="score-dial-inner">
 			<span class="score-dial-num"><?php echo esc_html( (int) $score ); ?></span>
 			<span class="score-dial-cap">Trust Score</span>
@@ -616,7 +629,12 @@ function trh_render_hand_meta_box( $post ) {
 	$labels = trh_experience_labels();
 	$resume = trh_hand_resume_url( $post->ID );
 
-	echo '<p><strong>Trust Score:</strong> ' . esc_html( trh_trust_score( $post->ID ) ) . ' / ' . esc_html( trh_trust_max() ) . '</p>';
+	$earned = trh_trust_ledger_total( $post->ID );
+	echo '<p><strong>Trust Score:</strong> ' . esc_html( trh_trust_score( $post->ID ) )
+		. ( $earned
+			? ' <span class="description">(' . esc_html( trh_trust_score( $post->ID ) - $earned ) . ' from signup, ' . esc_html( $earned ) . ' earned since)</span>'
+			: ' / ' . esc_html( trh_trust_max() ) )
+		. '</p>';
 	echo '<p><strong>Signup completed:</strong> ' . ( trh_hand_is_complete( $post->ID ) ? 'yes, all 3 steps' : 'no, stopped after step ' . esc_html( trh_hand_step_done( $post->ID ) ) ) . '</p>';
 	echo '<p><strong>Username:</strong> ' . esc_html( trh_hand_field( $post->ID, 'username' ) ) . '</p>';
 	echo '<p><strong>Email:</strong> ' . esc_html( trh_hand_field( $post->ID, 'email' ) ) . ' &nbsp; <strong>Phone:</strong> ' . esc_html( trh_hand_field( $post->ID, 'phone' ) ) . '</p>';
@@ -685,5 +703,6 @@ function trh_caretaker_column_content( $column, $post_id ) {
 		echo '<span aria-hidden="true">-</span>';
 		return;
 	}
-	echo esc_html( trh_trust_score( $post_id ) . ' / ' . trh_trust_max() );
+	$earned = trh_trust_ledger_total( $post_id );
+	echo esc_html( $earned ? trh_trust_score( $post_id ) . ' (+' . $earned . ' earned)' : trh_trust_score( $post_id ) . ' / ' . trh_trust_max() );
 }

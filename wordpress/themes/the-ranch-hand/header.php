@@ -33,30 +33,34 @@ $trh_acct_text = $trh_is_hand ? 'My Dashboard' : 'Sign In';
 			</span>
 		</a>
 
-		<div class="nav-links">
-			<?php if ( has_nav_menu( 'primary' ) ) : ?>
-				<?php
-				wp_nav_menu(
-					array(
-						'theme_location' => 'primary',
-						'container'      => false,
-						'items_wrap'     => '%3$s',
-						'walker'         => new TRH_Link_Walker(),
-						'fallback_cb'    => false,
-					)
-				);
-				?>
-			<?php else : ?>
-				<a class="nav-link" href="<?php echo esc_url( $trh_ranch ); ?>">Register Your Ranch</a>
-				<a class="nav-link" href="<?php echo esc_url( home_url( '/become-a-caretaker/' ) ); ?>">Become A Hand</a>
-			<?php endif; ?>
-			<a class="nav-link" href="<?php echo esc_url( $trh_acct_url ); ?>"><?php echo esc_html( $trh_acct_text ); ?></a>
-			<a class="btn btn-primary btn-sm" href="<?php echo esc_url( $trh_dir ); ?>">Find a Sitter</a>
-		</div>
+		<div class="nav-right">
+			<div class="nav-links">
+				<?php if ( has_nav_menu( 'primary' ) ) : ?>
+					<?php
+					wp_nav_menu(
+						array(
+							'theme_location' => 'primary',
+							'container'      => false,
+							'items_wrap'     => '%3$s',
+							'walker'         => new TRH_Link_Walker(),
+							'fallback_cb'    => false,
+						)
+					);
+					?>
+				<?php else : ?>
+					<a class="nav-link" href="<?php echo esc_url( $trh_ranch ); ?>">Register Your Ranch</a>
+					<a class="nav-link" href="<?php echo esc_url( home_url( '/become-a-caretaker/' ) ); ?>">Become A Hand</a>
+				<?php endif; ?>
+				<a class="nav-link" href="<?php echo esc_url( $trh_acct_url ); ?>"><?php echo esc_html( $trh_acct_text ); ?></a>
+				<a class="btn btn-primary btn-sm" href="<?php echo esc_url( $trh_dir ); ?>">Find a Sitter</a>
+			</div>
 
-		<button class="nav-toggle" id="trh-nav-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="trh-mobile-menu">
-			<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"/></svg>
-		</button>
+			<?php if ( $trh_is_hand ) { trh_trust_board(); } ?>
+
+			<button class="nav-toggle" id="trh-nav-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="trh-mobile-menu">
+				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"/></svg>
+			</button>
+		</div>
 	</nav>
 
 	<div class="mobile-menu" id="trh-mobile-menu">

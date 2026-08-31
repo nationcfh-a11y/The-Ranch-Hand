@@ -18,22 +18,24 @@ add_action( 'after_setup_theme', 'trh_ensure_pages' );
  * links do not 404:
  *   - become-a-caretaker -> page-become-a-caretaker.php ("Become A Hand")
  *   - ranch-signup       -> page-ranch-signup.php ("Register Your Ranch")
+ *   - ranch-plans        -> page-ranch-plans.php (job-posting tiers)
  *
  * This runs on after_setup_theme behind an option guard rather than on
  * after_switch_theme: the theme is already active on the live site, so
  * after_switch_theme never fires again and the pages would never be created on
  * a plain deploy. Same pattern (and same reason) as inc/pages.php and the hand
- * pages in inc/hands.php. Bump the option key (_v3) if these ever need
+ * pages in inc/hands.php. Bump the option key (_v4) if these ever need
  * re-creating.
  */
 function trh_ensure_pages() {
-	if ( get_option( 'trh_theme_pages_v2' ) ) {
+	if ( get_option( 'trh_theme_pages_v3' ) ) {
 		return;
 	}
 
 	$pages = array(
 		'become-a-caretaker' => 'Become a Caretaker',
 		'ranch-signup'       => 'Register Your Ranch',
+		'ranch-plans'        => 'Ranch Job Plans',
 	);
 
 	foreach ( $pages as $slug => $title ) {
@@ -51,7 +53,7 @@ function trh_ensure_pages() {
 		);
 	}
 
-	update_option( 'trh_theme_pages_v2', 1 );
+	update_option( 'trh_theme_pages_v3', 1 );
 }
 
 add_action( 'after_switch_theme', 'trh_seed_caretakers' );

@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'TRH_VERSION', '1.1.3' );
+define( 'TRH_VERSION', '1.2.0' );
 
 require get_template_directory() . '/inc/cpt.php';
 require get_template_directory() . '/inc/seed.php';
@@ -18,6 +18,7 @@ require get_template_directory() . '/inc/sheet.php';
 require get_template_directory() . '/inc/pages.php';
 require get_template_directory() . '/inc/hands.php';
 require get_template_directory() . '/inc/hand-signup.php';
+require get_template_directory() . '/inc/trust-board.php';
 require get_template_directory() . '/inc/migrate-emdash.php';
 
 /* -------------------------------------------------------------------------

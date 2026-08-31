@@ -94,6 +94,8 @@ $trh_login   = isset( $_GET['login'] ) && is_scalar( $_GET['login'] ) ? sanitize
 	$trh_score     = trh_trust_score( $trh_profile );
 	$trh_rows      = trh_trust_rows( $trh_profile );
 	$trh_available = trh_trust_available( $trh_profile );
+	$trh_awards    = trh_trust_ledger_recent( $trh_profile );
+	$trh_earned    = trh_trust_ledger_total( $trh_profile );
 	$trh_status    = trh_hand_status( $trh_profile );
 	$trh_complete  = trh_hand_is_complete( $trh_profile );
 	$trh_next_step = max( 1, min( 3, trh_hand_step_done( $trh_profile ) + 1 ) );
@@ -153,12 +155,15 @@ $trh_login   = isset( $_GET['login'] ) && is_scalar( $_GET['login'] ) ? sanitize
 				<div class="dash-main">
 
 					<!-- Trust Score -->
-					<div class="card">
+					<div class="card" id="trust-score">
 						<div class="score-head">
 							<?php trh_trust_dial( $trh_score, '8.5rem' ); ?>
 							<div>
 								<h2 class="display-md">Trust Score</h2>
 								<p class="muted mt-2">Your Trust Score is how your profile grows. A higher score puts you in front of more owners and better paying jobs. It climbs as you complete your profile, and later as you finish bookings and collect reviews.</p>
+								<?php if ( $trh_earned ) : ?>
+									<p class="score-avail mt-4"><strong><?php echo esc_html( $trh_score - $trh_earned ); ?></strong> from your profile, <strong>+<?php echo esc_html( $trh_earned ); ?></strong> earned since.</p>
+								<?php endif; ?>
 								<?php if ( $trh_available ) : ?>
 									<p class="score-avail mt-4"><strong><?php echo esc_html( $trh_available ); ?> points</strong> still available on this page.</p>
 								<?php endif; ?>
@@ -182,7 +187,30 @@ $trh_login   = isset( $_GET['login'] ) && is_scalar( $_GET['login'] ) ? sanitize
 							<?php endforeach; ?>
 						</ul>
 
-						<p class="help mt-4">Coming with the booking engine: points for completed jobs, owner reviews, repeat clients, and identity verification.</p>
+						<?php if ( $trh_awards ) : ?>
+							<div class="score-earned">
+								<p class="score-earned-head"><span>Earned since signup</span> <span>+<?php echo esc_html( $trh_earned ); ?></span></p>
+								<ul class="score-list mt-2">
+									<?php foreach ( $trh_awards as $trh_award ) : ?>
+										<li class="score-row is-earned">
+											<span class="score-tick" aria-hidden="true">✓</span>
+											<span class="score-text">
+												<span class="score-label"><?php echo esc_html( trh_trust_award_label( $trh_award['type'] ) ); ?></span>
+												<?php if ( $trh_award['note'] ) : ?>
+													<span class="score-blurb"><?php echo esc_html( $trh_award['note'] ); ?></span>
+												<?php endif; ?>
+												<?php if ( $trh_award['time'] ) : ?>
+													<span class="score-when"><?php echo esc_html( wp_date( 'M j, Y', $trh_award['time'] ) ); ?></span>
+												<?php endif; ?>
+											</span>
+											<span class="score-pts">+<?php echo esc_html( $trh_award['points'] ); ?></span>
+										</li>
+									<?php endforeach; ?>
+								</ul>
+							</div>
+						<?php else : ?>
+							<p class="help mt-4">Coming with the booking engine: points for completed jobs, owner reviews, repeat clients, and identity verification.</p>
+						<?php endif; ?>
 					</div>
 
 					<!-- Experience -->

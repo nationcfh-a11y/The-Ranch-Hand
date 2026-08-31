@@ -34,6 +34,9 @@ Node/React app in `../client` and `../server`) is **phase 2**.
 - **Hand dashboard:** `/dashboard/` with front-end sign-in, the Trust Score and its
   breakdown, review status, and one-click links back to whatever is still
   unclaimed.
+- **Trust Score Board:** a signed-in Hand carries their score in the top right of
+  the header on every page. When points land it flashes **+15** and counts the
+  total up, live. See [Trust Score Board](#trust-score-board).
 - **12 sample caretakers** auto-loaded on activation (edit/replace them under
   **Caretakers** in wp-admin).
 - **Leads:** every booking request and contact message is saved under
@@ -125,6 +128,63 @@ the amounts, labels, or add new ways to earn in **one place**:
 `trh_trust_components()` in `themes/the-ranch-hand/inc/hands.php`. The wizard,
 the dashboard, the landing page, and the admin column all read from it.
 
+### Points earned after signup
+
+Signup points are *derived*, which is why they can't hold anything a Hand earns
+later: a finished job or an owner's review matches no profile field, so the next
+recalculation would wipe it. Those points live in an append-only **award ledger**
+on the profile post instead, and the stored score is the sum of both halves:
+
+```
+trh_trust_score() = derived profile points + ledger total
+```
+
+Neither half is ever incremented in place, so recalculating is still safe.
+
+Every point source calls one function (`inc/trust-board.php`):
+
+```php
+trh_award_trust_points( $profile_id, 'review_received', 15, 'Review from the Miller job' );
+```
+
+Award types are defined in `trh_trust_award_types()` — job completed (20), review
+from an owner (15), repeat client (10), sponsor spot watched (5), identity
+verified (25), and a manual bonus. The amount is per-award, so a five-star review
+can be worth more than a three-star one without adding a type. Points can be
+negative to take some back, and `trh_revoke_trust_award()` removes an award
+outright. A `trh_trust_points_awarded` action fires after each one.
+
+Until the booking engine ships, you award points by hand: open the Hand in
+**wp-admin → Caretakers**, use the **Trust Score awards** box in the sidebar
+(type, amount, and a note the Hand sees), and press **Update**. The same box
+lists everything awarded so far, with a checkbox to take one back.
+
+### Trust Score Board
+
+The header pill. It shows a signed-in Hand their score on every page, and when
+the score rises it flashes `+15` and counts the total up to the new number.
+
+A rise reaches the Hand two ways, both ending in the same animation:
+
+1. **On load** — the page already knows how many points they haven't been shown.
+2. **While the page is open** — it asks `GET /wp-json/ranch-hand/v1/trust` every
+   30 seconds (paused while the tab is hidden, and checked again the moment it
+   comes back), so an award that lands mid-session shows up with no refresh.
+
+What keeps a rise from being celebrated twice, or missed entirely, is a per-user
+watermark (`trh_trust_seen` user meta) holding the score the Hand was last
+*shown*. The board posts to `/trust/seen` once the count-up finishes. On its very
+first read the watermark seeds itself to the current score, so Hands who signed
+up before the board existed don't get a phantom "+130".
+
+The `<a>` renders the real total and a tiny inline primer rewinds it to the
+watermark before first paint — so the animation starts on the old number with no
+flash, and a Hand with JavaScript off still sees the correct score.
+
+Awards also appear on the dashboard under **Earned since signup**, with the note
+and date for each. The dial's ring simply stays full once a score passes 130
+rather than claiming "145 out of 130".
+
 ### Reviewing an application
 
 Open **wp-admin → Caretakers**. Hand-created profiles show their score in the
@@ -138,6 +198,8 @@ their rates and availability in the same screen.
 | Thing | File |
 |-------|------|
 | Role, data model, Trust Score, experience checklist | `inc/hands.php` |
+| Award ledger, REST endpoints, header board, admin award box | `inc/trust-board.php` |
+| The board's animation + polling | `assets/js/trust-board.js` |
 | Step handlers, validation, uploads, front-end login | `inc/hand-signup.php` |
 | The wizard (all 3 steps) | `page-hand-signup.php` |
 | The dashboard + sign-in | `page-dashboard.php` |
