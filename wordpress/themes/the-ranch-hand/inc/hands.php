@@ -83,6 +83,39 @@ function trh_ensure_hand_pages() {
 	update_option( 'trh_hand_pages_v1', 1 );
 }
 
+add_action( 'init', 'trh_rescore_hands_once', 99 );
+/**
+ * Re-derive every Hand's Trust Score once, after social accounts changed from a
+ * flat 15 to 5 per linked account (up to 30 for six).
+ *
+ * A score is stored on the profile and otherwise only recalculated when that
+ * Hand saves a signup step, so without this an existing profile would keep
+ * whatever total the old rules gave it, possibly for months. Runs at init 99,
+ * after the caretaker post type is registered. Bump the option key whenever the
+ * scoring rules change again.
+ */
+function trh_rescore_hands_once() {
+	if ( get_option( 'trh_trust_rescore_v2' ) ) {
+		return;
+	}
+
+	$profiles = get_posts(
+		array(
+			'post_type'   => 'caretaker',
+			'post_status' => 'any',
+			'numberposts' => -1,
+			'fields'      => 'ids',
+			'meta_key'    => 'trh_user_id', // Hand-created profiles only
+		)
+	);
+
+	foreach ( $profiles as $profile_id ) {
+		trh_recalculate_trust_score( $profile_id );
+	}
+
+	update_option( 'trh_trust_rescore_v2', 1 );
+}
+
 /**
  * Permalink of one of our pages by slug, falling back to a pretty path if the
  * page was deleted (so links degrade to a 404 rather than to the homepage).
@@ -305,9 +338,14 @@ function trh_experience_labels() {
  * Every way a Hand earns Trust Score points during signup.
  *
  * The four non-bonus rows add up to exactly 100: finishing the required parts
- * of signup lands you on 100. The two bonus rows (photo, socials) are the
- * "+15 points" nudges shown next to those fields, taking a fully finished
- * profile to 130.
+ * of signup lands you on 100. The two bonus rows take a fully finished profile
+ * to 145. A profile picture is a flat 15; social accounts are scored per link,
+ * 5 points each for up to six, so 30.
+ *
+ * A row carrying a 'per_unit' key is scored per item instead of
+ * all-or-nothing. Its 'points' is then the ceiling and 'units' the number of
+ * items that still count. See trh_trust_awarded(), which is the only place
+ * that turns a profile into points.
  *
  * @return array<string, array{points:int, label:string, blurb:string, step:int, bonus:bool}>
  */
@@ -349,11 +387,13 @@ function trh_trust_components() {
 			'bonus'  => true,
 		),
 		'socials'    => array(
-			'points' => 15,
-			'label'  => 'Social accounts connected',
-			'blurb'  => 'A real presence online is one more reason to trust you.',
-			'step'   => 2,
-			'bonus'  => true,
+			'points'   => 30, // ceiling: six links at 5 apiece
+			'per_unit' => 5,
+			'units'    => 6,
+			'label'    => 'Social accounts connected',
+			'blurb'    => 'Five points for each account you link, up to six.',
+			'step'     => 2,
+			'bonus'    => true,
 		),
 	);
 }
@@ -405,6 +445,54 @@ function trh_trust_earned( $post_id ) {
 }
 
 /**
+ * How many countable items a per-unit component has on this profile.
+ *
+ * @return int
+ */
+function trh_trust_unit_count( $post_id, $key ) {
+	if ( 'socials' === $key ) {
+		return count( trh_hand_socials( $post_id ) );
+	}
+	return 0;
+}
+
+/**
+ * Points each component has actually earned on this profile.
+ *
+ * The single source of truth for scoring: all-or-nothing rows award their full
+ * 'points', per-unit rows award 'per_unit' for every item up to 'units'.
+ * The stored score, the breakdown UI, and "points still available" are all
+ * derived from this, so those numbers cannot drift apart.
+ *
+ * @return array<string, int> component key => points earned
+ */
+function trh_trust_awarded( $post_id ) {
+	$post_id    = (int) $post_id;
+	$components = trh_trust_components();
+	$awarded    = array_fill_keys( array_keys( $components ), 0 );
+
+	if ( ! $post_id ) {
+		return $awarded;
+	}
+
+	$earned = trh_trust_earned( $post_id );
+
+	foreach ( $components as $key => $component ) {
+		if ( empty( $earned[ $key ] ) ) {
+			continue;
+		}
+		if ( isset( $component['per_unit'] ) ) {
+			$units           = min( trh_trust_unit_count( $post_id, $key ), (int) $component['units'] );
+			$awarded[ $key ] = $units * (int) $component['per_unit'];
+		} else {
+			$awarded[ $key ] = (int) $component['points'];
+		}
+	}
+
+	return $awarded;
+}
+
+/**
  * Recalculate and store the Trust Score.
  *
  * Two halves, both idempotent: the signup points are re-derived from the
@@ -415,19 +503,8 @@ function trh_trust_earned( $post_id ) {
  * @return int The stored score.
  */
 function trh_recalculate_trust_score( $post_id ) {
-	$components = trh_trust_components();
-	$earned     = trh_trust_earned( $post_id );
-	$score      = 0;
-	$awards     = array();
-
-	foreach ( $components as $key => $component ) {
-		if ( ! empty( $earned[ $key ] ) ) {
-			$score           += $component['points'];
-			$awards[ $key ]   = $component['points'];
-		}
-	}
-
-	$score += trh_trust_ledger_total( $post_id );
+	$awards = array_filter( trh_trust_awarded( $post_id ) );
+	$score  = array_sum( $awards ) + trh_trust_ledger_total( $post_id );
 
 	update_post_meta( $post_id, 'trh_trust_score', $score );
 	update_post_meta( $post_id, 'trh_trust_awards', $awards );
@@ -447,12 +524,34 @@ function trh_trust_score( $post_id ) {
  * @return array<int, array>
  */
 function trh_trust_rows( $post_id ) {
-	$earned = trh_trust_earned( $post_id );
-	$rows   = array();
+	$post_id = (int) $post_id;
+	$earned  = trh_trust_earned( $post_id );
+	$awarded = trh_trust_awarded( $post_id );
+	$rows    = array();
+
 	foreach ( trh_trust_components() as $key => $component ) {
-		$component['key']    = $key;
-		$component['earned'] = ! empty( $earned[ $key ] );
-		$rows[]              = $component;
+		$component['key']     = $key;
+		$component['earned']  = ! empty( $earned[ $key ] );
+		$component['awarded'] = isset( $awarded[ $key ] ) ? (int) $awarded[ $key ] : 0;
+		$component['done']    = $component['awarded'] >= (int) $component['points'];
+
+		// A per-unit row reports its own progress, so "3 of 6" is readable
+		// without the Hand having to go and count their own links.
+		if ( isset( $component['per_unit'] ) && $post_id ) {
+			$count = min( trh_trust_unit_count( $post_id, $key ), (int) $component['units'] );
+			if ( $component['done'] ) {
+				$component['blurb'] = sprintf( 'All %d linked.', (int) $component['units'] );
+			} elseif ( $count > 0 ) {
+				$component['blurb'] = sprintf(
+					'%d of %d linked. Another %d points for each one you add.',
+					$count,
+					(int) $component['units'],
+					(int) $component['per_unit']
+				);
+			}
+		}
+
+		$rows[] = $component;
 	}
 	return $rows;
 }
@@ -461,9 +560,8 @@ function trh_trust_rows( $post_id ) {
 function trh_trust_available( $post_id ) {
 	$left = 0;
 	foreach ( trh_trust_rows( $post_id ) as $row ) {
-		if ( ! $row['earned'] ) {
-			$left += $row['points'];
-		}
+		// max(): a per-unit row that is partly filled still has points left.
+		$left += max( 0, (int) $row['points'] - (int) $row['awarded'] );
 	}
 	return $left;
 }
@@ -583,6 +681,30 @@ function trh_points_pill( $points, $earned = false ) {
 		$earned ? ' is-earned' : '',
 		$earned ? '✓ ' : '+',
 		(int) $points
+	);
+}
+
+/**
+ * Points chip for a per-unit section: "+5 points each" until something is
+ * linked, then "3 of 6 linked, 15 points" so the running total is visible
+ * right where the fields are.
+ */
+function trh_points_pill_each( $per_unit, $count, $units ) {
+	$per_unit = (int) $per_unit;
+	$count    = min( (int) $count, (int) $units );
+	$units    = (int) $units;
+
+	if ( $count < 1 ) {
+		printf( '<span class="pts-pill">+%d points each</span>', $per_unit );
+		return;
+	}
+
+	printf(
+		'<span class="pts-pill%s">✓ %d of %d linked, %d points</span>',
+		$count >= $units ? ' is-earned' : '',
+		$count,
+		$units,
+		$count * $per_unit
 	);
 }
 

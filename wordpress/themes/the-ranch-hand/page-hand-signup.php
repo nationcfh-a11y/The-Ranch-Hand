@@ -31,7 +31,7 @@ if ( 1 === $trh_step && $trh_profile ) {
 
 $trh_steps = array(
 	1 => array( 'label' => 'About you',   'points' => 40, 'blurb' => 'Who you are and where you work.' ),
-	2 => array( 'label' => 'Your proof',  'points' => 70, 'blurb' => 'Resume, photo, socials, references.' ),
+	2 => array( 'label' => 'Your proof',  'points' => 85, 'blurb' => 'Resume, photo, socials, references.' ),
 	3 => array( 'label' => 'Experience',  'points' => 20, 'blurb' => 'Everything you have hands-on experience with.' ),
 );
 
@@ -197,6 +197,9 @@ get_header();
 					$trh_resume   = trh_hand_resume_url( $trh_profile );
 					$trh_photo_id = get_post_thumbnail_id( $trh_profile );
 					$trh_earned   = trh_trust_earned( $trh_profile );
+					$trh_awarded  = trh_trust_awarded( $trh_profile );
+					$trh_social_c = trh_trust_components()['socials'];
+					$trh_social_n = count( trh_hand_socials( $trh_profile ) );
 					?>
 					<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post" enctype="multipart/form-data">
 						<input type="hidden" name="action" value="trh_hand_step2" />
@@ -246,9 +249,9 @@ get_header();
 						<div class="card wizard-card mt-6">
 							<div class="card-head">
 								<h2 class="display-md">Connect your social accounts</h2>
-								<?php trh_points_pill( 15, ! empty( $trh_earned['socials'] ) ); ?>
+								<?php trh_points_pill_each( $trh_social_c['per_unit'], $trh_social_n, $trh_social_c['units'] ); ?>
 							</div>
-							<p class="muted mt-2">Add any one of these to earn the points. Owners like seeing the animals you already work with.</p>
+							<p class="muted mt-2">Every account you link is worth <?php echo esc_html( $trh_social_c['per_unit'] ); ?> points, up to <?php echo esc_html( $trh_social_c['points'] ); ?> for all <?php echo esc_html( $trh_social_c['units'] ); ?>. Owners like seeing the animals you already work with.</p>
 
 							<div class="grid grid-2 mt-4" style="gap:0 1.25rem;">
 								<?php foreach ( trh_social_networks() as $key => $net ) : ?>
@@ -391,7 +394,7 @@ get_header();
 									<span class="score-label"><?php echo esc_html( $trh_row['label'] ); ?><?php echo $trh_row['bonus'] ? ' <span class="label-opt">bonus</span>' : ''; ?></span>
 									<span class="score-blurb"><?php echo esc_html( $trh_row['blurb'] ); ?></span>
 								</span>
-								<span class="score-pts"><?php echo $trh_row['earned'] ? '+' : ''; ?><?php echo esc_html( $trh_row['points'] ); ?></span>
+								<span class="score-pts"><?php echo $trh_row['earned'] ? '+' . esc_html( $trh_row['awarded'] ) : esc_html( $trh_row['points'] ); ?></span>
 							</li>
 						<?php endforeach; ?>
 					</ul>

@@ -78,7 +78,7 @@ $steps = array(
 						</li>
 					<?php endforeach; ?>
 				</ul>
-				<p class="help mt-4">Finish the required steps and you land on <?php echo esc_html( trh_trust_base() ); ?>. Add a photo and your socials and you start at <?php echo esc_html( trh_trust_max() ); ?>. It keeps climbing as you complete jobs and collect reviews.</p>
+				<p class="help mt-4">Finish the required steps and you land on <?php echo esc_html( trh_trust_base() ); ?>. Add a photo and link all six social accounts and you start at <?php echo esc_html( trh_trust_max() ); ?>. It keeps climbing as you complete jobs and collect reviews.</p>
 			</div>
 		</div>
 	</div>

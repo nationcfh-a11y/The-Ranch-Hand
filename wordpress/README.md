@@ -121,12 +121,24 @@ recalculated at any time and can't drift or be double-awarded
 | References added (1+) | 20 | 2 |
 | Experience checklist (3+ ticks) | 20 | 3 |
 | Profile picture *(bonus)* | 15 | 2 |
-| Social accounts connected *(bonus)* | 15 | 2 |
+| Social accounts connected *(bonus)* | 5 each, 30 max | 2 |
 
-Finishing the required path lands on **100**; with both bonuses, **130**. Change
+Finishing the required path lands on **100**; with both bonuses, **145**. Change
 the amounts, labels, or add new ways to earn in **one place**:
 `trh_trust_components()` in `themes/the-ranch-hand/inc/hands.php`. The wizard,
 the dashboard, the landing page, and the admin column all read from it.
+
+Most rows are all-or-nothing. A row with a `per_unit` key is scored per item
+instead: social accounts pay 5 points for each of the six links, so `points`
+(30) is the ceiling rather than a lump sum. `trh_trust_awarded()` is the only
+place that turns a profile into points, and everything else (the stored score,
+the breakdown, "points still available", the dashboard's *+20 more* button)
+derives from it, so those numbers cannot disagree.
+
+Because a score is stored on the profile and only recalculated when that Hand
+saves a step, changing the scoring rules needs a one-time rescore of existing
+profiles, or they keep their old totals. `trh_rescore_hands_once()` does that,
+guarded by an option key; bump the key when the rules change again.
 
 ### Points earned after signup
 
@@ -175,15 +187,15 @@ What keeps a rise from being celebrated twice, or missed entirely, is a per-user
 watermark (`trh_trust_seen` user meta) holding the score the Hand was last
 *shown*. The board posts to `/trust/seen` once the count-up finishes. On its very
 first read the watermark seeds itself to the current score, so Hands who signed
-up before the board existed don't get a phantom "+130".
+up before the board existed don't get a phantom "+145".
 
 The `<a>` renders the real total and a tiny inline primer rewinds it to the
 watermark before first paint — so the animation starts on the old number with no
 flash, and a Hand with JavaScript off still sees the correct score.
 
 Awards also appear on the dashboard under **Earned since signup**, with the note
-and date for each. The dial's ring simply stays full once a score passes 130
-rather than claiming "145 out of 130".
+and date for each. The dial's ring simply stays full once a score passes the
+signup maximum rather than claiming "170 out of 145".
 
 ### Reviewing an application
 

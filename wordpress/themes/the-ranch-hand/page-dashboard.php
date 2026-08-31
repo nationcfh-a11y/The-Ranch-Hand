@@ -178,10 +178,13 @@ $trh_login   = isset( $_GET['login'] ) && is_scalar( $_GET['login'] ) ? sanitize
 										<span class="score-label"><?php echo esc_html( $trh_row['label'] ); ?><?php echo $trh_row['bonus'] ? ' <span class="label-opt">bonus</span>' : ''; ?></span>
 										<span class="score-blurb"><?php echo esc_html( $trh_row['blurb'] ); ?></span>
 									</span>
-									<?php if ( $trh_row['earned'] ) : ?>
-										<span class="score-pts">+<?php echo esc_html( $trh_row['points'] ); ?></span>
+									<?php if ( $trh_row['done'] ) : ?>
+										<span class="score-pts">+<?php echo esc_html( $trh_row['awarded'] ); ?></span>
 									<?php else : ?>
-										<a class="btn btn-hay btn-sm score-cta" href="<?php echo esc_url( add_query_arg( 'from', 'dashboard', trh_signup_url( $trh_row['step'] ) ) ); ?>">Add it +<?php echo esc_html( $trh_row['points'] ); ?></a>
+										<a class="btn btn-hay btn-sm score-cta" href="<?php echo esc_url( add_query_arg( 'from', 'dashboard', trh_signup_url( $trh_row['step'] ) ) ); ?>"><?php
+											$trh_row_left = (int) $trh_row['points'] - (int) $trh_row['awarded'];
+											echo esc_html( $trh_row['awarded'] ? '+' . $trh_row_left . ' more' : 'Add it +' . $trh_row_left );
+										?></a>
 									<?php endif; ?>
 								</li>
 							<?php endforeach; ?>
