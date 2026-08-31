@@ -151,7 +151,16 @@ function trh_normalize_url( $raw ) {
 	}
 	$url  = esc_url_raw( $raw );
 	$host = wp_parse_url( $url, PHP_URL_HOST );
-	return $host ? $url : '';
+	if ( ! $host ) {
+		return '';
+	}
+
+	// wp_parse_url() will call almost anything a host, so "not a url" becomes
+	// https://not%20a%20url and passes. That was cosmetic when links were only
+	// displayed; now that each one is worth Trust Score points, a string that
+	// is not a domain must not earn any. Require at least one dot and nothing
+	// but the characters a hostname can hold.
+	return preg_match( '/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i', $host ) ? $url : '';
 }
 
 /**
@@ -989,7 +998,9 @@ function trh_handle_hand_login() {
 	}
 
 	wp_set_current_user( $user->ID );
-	wp_safe_redirect( trh_dashboard_url() );
+	// This login form is shared with ranches; send each role to the right place.
+	$destination = trh_is_ranch( $user->ID ) ? trh_ranch_home_url() : trh_dashboard_url();
+	wp_safe_redirect( $destination );
 	exit;
 }
 
@@ -1007,4 +1018,92 @@ function trh_handle_hand_logout() {
 /** URL that logs the current Hand out. */
 function trh_hand_logout_url() {
 	return wp_nonce_url( add_query_arg( 'action', 'trh_hand_logout', admin_url( 'admin-post.php' ) ), 'trh_hand_logout' );
+}
+
+/* -------------------------------------------------------------------------
+ * My Profile: the two things a Hand changes often, and both move the score
+ * ---------------------------------------------------------------------- */
+
+add_action( 'admin_post_nopriv_trh_hand_profile', 'trh_handle_hand_profile' );
+add_action( 'admin_post_trh_hand_profile', 'trh_handle_hand_profile' );
+/**
+ * Save the profile picture and social links from /my-profile/.
+ *
+ * Deliberately a subset of step 2: the picture and the links are the parts a
+ * Hand comes back to change, and both are scored, so the header badge moves the
+ * moment they save. Resume and references stay in the wizard, where the
+ * surrounding explanation lives.
+ */
+function trh_handle_hand_profile() {
+	check_admin_referer( 'trh_hand_profile', 'trh_profile_nonce' );
+	$post_id = trh_require_hand_profile();
+	$errors  = array();
+	$before  = trh_trust_score( $post_id );
+
+	// Remove the picture. Checked before the upload, so replacing and removing
+	// in one submit cannot fight each other.
+	if ( ! empty( $_POST['remove_photo'] ) ) {
+		$previous = (int) get_post_thumbnail_id( $post_id );
+		delete_post_thumbnail( $post_id );
+		if ( $previous ) {
+			wp_delete_attachment( $previous, true );
+		}
+	} else {
+		$photo = trh_store_hand_upload( 'photo', 'photo', $post_id );
+		if ( is_wp_error( $photo ) ) {
+			$errors[] = $photo->get_error_message();
+		} elseif ( $photo ) {
+			$previous = (int) get_post_thumbnail_id( $post_id );
+			set_post_thumbnail( $post_id, $photo );
+			if ( $previous && $previous !== $photo ) {
+				wp_delete_attachment( $previous, true );
+			}
+		}
+	}
+
+	// Socials. An emptied field is a removal, which is why the whole set is
+	// rewritten rather than merged: the score has to be able to go down.
+	$socials   = array();
+	$social_in = isset( $_POST['social'] ) && is_array( $_POST['social'] ) ? $_POST['social'] : array();
+	$networks  = trh_social_networks();
+	foreach ( array_keys( $networks ) as $key ) {
+		$raw = isset( $social_in[ $key ] ) && is_scalar( $social_in[ $key ] ) ? wp_unslash( $social_in[ $key ] ) : '';
+		$url = trh_normalize_url( $raw );
+		if ( '' !== trim( (string) $raw ) && '' === $url ) {
+			$errors[] = 'That does not look like a working link for ' . $networks[ $key ]['label'] . '.';
+			continue;
+		}
+		if ( $url ) {
+			$socials[ $key ] = $url;
+		}
+	}
+	update_post_meta( $post_id, 'trh_socials', $socials );
+
+	$after = trh_recalculate_trust_score( $post_id );
+
+	if ( $errors ) {
+		trh_signup_fail_profile( $errors );
+	}
+
+	// Keep the PDF and the Sheet row honest about what the profile now holds.
+	trh_store_profile_pdf( $post_id );
+	trh_mirror_hand( $post_id );
+
+	// The badge celebrates a rise on its own, from the watermark. A drop needs
+	// saying out loud here, or it looks like the save went wrong.
+	$args = array( 'saved' => 1 );
+	if ( $after !== $before ) {
+		$args['delta'] = $after - $before;
+	}
+	wp_safe_redirect( add_query_arg( $args, trh_page_url( 'my-profile' ) ) );
+	exit;
+}
+
+/** Bounce back to /my-profile/ with the errors, the way the wizard steps do. */
+function trh_signup_fail_profile( $errors ) {
+	// The token is how the payload is found again; dropping it stores the
+	// errors somewhere nothing will ever read.
+	$token = trh_signup_flash_set( (array) $errors );
+	wp_safe_redirect( add_query_arg( 'e', $token, trh_page_url( 'my-profile' ) ) . '#trh-signup-errors' );
+	exit;
 }

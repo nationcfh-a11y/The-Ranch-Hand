@@ -50,17 +50,21 @@ function trh_ensure_hand_role() {
 
 add_action( 'after_setup_theme', 'trh_ensure_hand_pages' );
 /**
- * Create the two pages the signup flow needs. Their templates resolve by slug
- * (page-hand-signup.php, page-dashboard.php), so post_content stays empty.
+ * Create the pages a Hand's account needs. Their templates resolve by slug
+ * (page-hand-signup.php, page-dashboard.php, page-my-profile.php), so
+ * post_content stays empty.
  */
 function trh_ensure_hand_pages() {
-	if ( get_option( 'trh_hand_pages_v1' ) ) {
+	// Bump this key when a page is added to the list below, so sites that ran
+	// the earlier version still get the new one.
+	if ( get_option( 'trh_hand_pages_v2' ) ) {
 		return;
 	}
 
 	$pages = array(
 		'hand-signup' => 'Create Your Hand Profile',
 		'dashboard'   => 'Dashboard',
+		'my-profile'  => 'My Profile',
 	);
 
 	foreach ( $pages as $slug => $title ) {
@@ -80,7 +84,7 @@ function trh_ensure_hand_pages() {
 		);
 	}
 
-	update_option( 'trh_hand_pages_v1', 1 );
+	update_option( 'trh_hand_pages_v2', 1 );
 }
 
 add_action( 'init', 'trh_rescore_hands_once', 99 );
@@ -660,6 +664,48 @@ function trh_hand_status( $post_id ) {
 		return array( 'label' => 'Profile unfinished', 'tone' => 'hay' );
 	}
 	return array( 'label' => 'Under review', 'tone' => 'hay' );
+}
+
+/** URL of a Hand's profile picture, or '' when they have not added one. */
+function trh_hand_avatar_url( $post_id, $size = 'thumbnail' ) {
+	$url = get_the_post_thumbnail_url( $post_id, $size );
+	return $url ? $url : '';
+}
+
+/**
+ * Initials to stand in for a missing profile picture.
+ *
+ * A photo is worth Trust Score points, so plenty of Hands will not have one
+ * yet. Initials read as a person where a broken image or a generic silhouette
+ * does not.
+ */
+function trh_hand_initials( $post_id ) {
+	$first = trim( (string) trh_hand_field( $post_id, 'first_name' ) );
+	$last  = trim( (string) trh_hand_field( $post_id, 'last_name' ) );
+	$out   = mb_substr( $first, 0, 1 ) . mb_substr( $last, 0, 1 );
+	if ( '' === trim( $out ) ) {
+		$out = mb_substr( (string) get_the_title( $post_id ), 0, 1 );
+	}
+	return mb_strtoupper( trim( $out ) );
+}
+
+/**
+ * The avatar itself, as an <img> or an initials disc.
+ *
+ * @param string $class CSS class shared by both forms, so the caller sizes it.
+ */
+function trh_hand_avatar( $post_id, $class = 'hand-avatar', $size = 'thumbnail' ) {
+	$url = trh_hand_avatar_url( $post_id, $size );
+	if ( $url ) {
+		printf( '<img class="%s" src="%s" alt="" />', esc_attr( $class ), esc_url( $url ) );
+		return;
+	}
+	printf(
+		'<span class="%s %s-initials" aria-hidden="true">%s</span>',
+		esc_attr( $class ),
+		esc_attr( $class ),
+		esc_html( trh_hand_initials( $post_id ) )
+	);
 }
 
 /** Display name for a Hand profile. */

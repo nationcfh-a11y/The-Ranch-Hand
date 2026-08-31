@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'TRH_VERSION', '1.2.1' );
+define( 'TRH_VERSION', '1.3.0' );
 
 require get_template_directory() . '/inc/cpt.php';
 require get_template_directory() . '/inc/seed.php';
@@ -18,6 +18,7 @@ require get_template_directory() . '/inc/sheet.php';
 require get_template_directory() . '/inc/pages.php';
 require get_template_directory() . '/inc/hands.php';
 require get_template_directory() . '/inc/hand-signup.php';
+require get_template_directory() . '/inc/ranch.php';
 require get_template_directory() . '/inc/trust-board.php';
 require get_template_directory() . '/inc/migrate-emdash.php';
 
@@ -144,6 +145,61 @@ function trh_customize( $wp_customize ) {
 function trh_opt( $key, $fallback = '' ) {
 	$v = get_theme_mod( $key, $fallback );
 	return $v !== '' ? $v : $fallback;
+}
+
+/* -------------------------------------------------------------------------
+ * The signed-in Hand's app navigation
+ * ---------------------------------------------------------------------- */
+
+/**
+ * Where a signed-in Hand works.
+ *
+ * The marketing nav (Register Your Ranch, Find a Sitter) is aimed at owners and
+ * visitors. Once a Hand signs in they are inside their own tool, so the header
+ * swaps to the places that are theirs. Add a destination here and it appears in
+ * both the desktop header and the mobile menu.
+ *
+ * Editing a profile and signing out live in the account menu behind the badge,
+ * not here.
+ *
+ * @return array<int, array{label:string, url:string, match:string}>
+ */
+function trh_app_nav_items() {
+	$items = array(
+		array(
+			'label' => 'Dashboard',
+			'url'   => trh_dashboard_url(),
+			'match' => 'dashboard',
+		),
+		// Job Board and Bulletin Board slot in here.
+	);
+
+	/**
+	 * Filter the Hand's app nav. The job board and bulletin board hang here
+	 * once they exist.
+	 */
+	return apply_filters( 'trh_app_nav_items', $items );
+}
+
+/**
+ * Which of the three headers this request gets.
+ *
+ * - `signup` while a Hand is still working through the wizard: the logo and
+ *   their score, nothing else competing with the form in front of them.
+ * - `app` for a signed-in Hand anywhere else.
+ * - `site` for everyone else, the marketing header.
+ *
+ * A Hand who has *finished* signing up and comes back to /hand-signup/ to edit
+ * keeps the app header. Stripping it there would strand them on a page with no
+ * way out but the logo.
+ */
+function trh_header_mode() {
+	$profile = is_user_logged_in() ? trh_hand_profile_id() : 0;
+
+	if ( is_page( 'hand-signup' ) && ! ( $profile && trh_hand_is_complete( $profile ) ) ) {
+		return 'signup';
+	}
+	return $profile ? 'app' : 'site';
 }
 
 /* -------------------------------------------------------------------------

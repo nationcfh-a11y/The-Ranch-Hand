@@ -164,6 +164,10 @@ ul { margin: 0; }
 @media (min-width: 768px) { .nav-links { display: flex; } .nav-toggle { display: none; } }
 .nav-link { padding: .5rem .75rem; border-radius: var(--radius-md); font-size: .875rem; font-weight: 700; color: var(--saddle); transition: color .15s ease; }
 .nav-link:hover, .nav-link.is-active { color: var(--barn); }
+.nav-link-quiet { color: var(--charcoal-muted); font-weight: 600; }
+.nav-link-quiet:hover { color: var(--saddle-dark); }
+/* Signup: the logo and the score, nothing to pull a Hand off the wizard. */
+.site-header-bare .nav { padding: .875rem 0; }
 .nav-toggle { background: transparent; border: none; color: var(--saddle); padding: .5rem; cursor: pointer; border-radius: var(--radius-md); }
 .nav-toggle:hover { background: var(--cream-200); }
 .mobile-menu { display: none; border-top: 1px solid var(--line); background: var(--cream-100); }
@@ -172,21 +176,26 @@ ul { margin: 0; }
 .mobile-menu-inner { display: flex; flex-direction: column; gap: .25rem; padding: .75rem 0; }
 
 /* --- Trust Score Board (header pill) ------------------------------------- */
+.account { position: relative; }
 .trust-board {
   position: relative;
   display: inline-flex; align-items: center; gap: .4375rem;
-  padding: .3125rem .625rem .3125rem .3125rem;
+  padding: .25rem .625rem .25rem .25rem;
   border: 1px solid var(--line); border-radius: 9999px;
   background: var(--cream-100); line-height: 1; white-space: nowrap;
+  font-family: inherit; cursor: pointer;
   transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
 }
-.trust-board:hover { border-color: var(--hay); background: #fff; }
-.trust-board-icon {
-  display: grid; place-items: center; flex: 0 0 auto;
-  width: 1.5rem; height: 1.5rem; border-radius: 9999px;
-  background: var(--hay); color: var(--charcoal);
+.trust-board:hover, .trust-board[aria-expanded="true"] { border-color: var(--hay); background: #fff; }
+.trust-board-avatar {
+  flex: 0 0 auto; width: 1.75rem; height: 1.75rem; border-radius: 9999px;
+  object-fit: cover; display: block; background: var(--cream-200);
 }
-.trust-board-icon svg { width: .9375rem; height: .9375rem; display: block; }
+.trust-board-avatar-initials {
+  display: grid; place-items: center;
+  background: var(--hay); color: var(--charcoal);
+  font-family: var(--font-display); font-size: .75rem; font-weight: 700; letter-spacing: .02em;
+}
 .trust-board-num {
   font-family: var(--font-display); font-size: .9375rem; font-weight: 700;
   color: var(--saddle-dark); font-variant-numeric: tabular-nums;
@@ -220,6 +229,54 @@ ul { margin: 0; }
   box-shadow: 0 0 0 3px rgba(217, 164, 65, .3);
 }
 .trust-board.is-rising .trust-board-num { color: var(--sage-dark); }
+.trust-board-pop.is-loss { background: var(--clay); }
+.trust-board.is-falling { border-color: var(--clay); box-shadow: 0 0 0 3px rgba(194, 96, 63, .22); }
+.trust-board.is-falling .trust-board-num { color: var(--clay-dark); }
+
+/* The account menu behind the badge. */
+.account-menu {
+  position: absolute; top: calc(100% + .5rem); right: 0; z-index: 50;
+  width: 15rem; padding: .5rem;
+  border: 1px solid var(--line); border-radius: var(--radius-lg);
+  background: var(--cream-100); box-shadow: var(--shadow-pop);
+}
+.account-head {
+  display: flex; align-items: center; gap: .625rem;
+  padding: .5rem .5rem .75rem; border-bottom: 1px solid var(--line);
+}
+.account-avatar {
+  flex: 0 0 auto; width: 2.5rem; height: 2.5rem; border-radius: 9999px;
+  object-fit: cover; display: block; background: var(--cream-200);
+}
+.account-avatar-initials {
+  display: grid; place-items: center;
+  background: var(--hay); color: var(--charcoal);
+  font-family: var(--font-display); font-size: .9375rem; font-weight: 700;
+}
+.account-id { display: flex; flex-direction: column; gap: .125rem; min-width: 0; }
+.account-name {
+  font-family: var(--font-display); font-size: .9375rem; font-weight: 700;
+  color: var(--saddle-dark); overflow: hidden; text-overflow: ellipsis;
+}
+.account-user { font-size: .8125rem; color: var(--charcoal-muted); }
+.account-score {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: .5rem 0; padding: .5rem .625rem; border-radius: var(--radius-md);
+  background: var(--cream-200); font-size: .8125rem; font-weight: 700;
+  color: var(--charcoal-muted);
+}
+.account-score:hover { background: var(--line); }
+.account-score strong {
+  font-family: var(--font-display); font-size: 1.125rem; color: var(--saddle-dark);
+  font-variant-numeric: tabular-nums;
+}
+.account-links { display: flex; flex-direction: column; }
+.account-links a {
+  padding: .5rem .625rem; border-radius: var(--radius-md);
+  font-size: .875rem; font-weight: 700; color: var(--saddle);
+}
+.account-links a:hover { background: var(--cream-200); color: var(--barn); }
+.account-signout { color: var(--charcoal-muted) !important; font-weight: 600 !important; }
 
 /* Announced to screen readers; never drawn. */
 .trust-board-live {
@@ -617,6 +674,50 @@ html, body { overflow-x: clip; }
 }
 .check-item.is-checked .check-box::after, .check-item:has(input:checked) .check-box::after { opacity: 1; }
 .check-text { color: var(--charcoal); }
+
+/* --- My Profile ---------------------------------------------------------- */
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+.profile-photo { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+.profile-photo-current {
+  width: 5.5rem; height: 5.5rem; border-radius: 9999px; object-fit: cover;
+  display: block; background: var(--cream-200); border: 2px solid var(--line);
+}
+.profile-photo-current-initials {
+  display: grid; place-items: center;
+  background: var(--hay); color: var(--charcoal);
+  font-family: var(--font-display); font-size: 1.75rem; font-weight: 700;
+}
+.profile-photo-controls { display: flex; flex-direction: column; align-items: flex-start; gap: .625rem; }
+.profile-photo-controls label.btn { cursor: pointer; margin: 0; }
+.profile-photo-remove {
+  display: inline-flex; align-items: center; gap: .4375rem;
+  font-size: .875rem; color: var(--charcoal-muted); cursor: pointer;
+}
+.social-rows { display: flex; flex-direction: column; gap: .625rem; }
+.social-row {
+  display: grid; grid-template-columns: 1fr; gap: .375rem;
+  padding: .75rem; border: 1px solid var(--line); border-radius: var(--radius-md);
+  background: var(--cream-100);
+}
+@media (min-width: 640px) {
+  .social-row { grid-template-columns: 9rem 1fr 3rem; align-items: center; gap: .75rem; }
+}
+.social-row.is-linked { border-color: var(--sage); background: rgba(111, 138, 94, .06); }
+.social-label {
+  display: inline-flex; align-items: center; gap: .4375rem;
+  font-size: .875rem; font-weight: 700; color: var(--saddle-dark);
+}
+.social-row input { width: 100%; }
+.social-pts {
+  font-size: .8125rem; font-weight: 800; color: var(--sage-dark); text-align: right;
+}
+.mt-8 { margin-top: 2rem; }
+.notice-warn {
+  border-left: 4px solid var(--clay); background: rgba(194, 96, 63, .08); color: var(--saddle-dark);
+}
 
 /* --- Trust Score dial + breakdown --------------------------------------- */
 .score-dial {

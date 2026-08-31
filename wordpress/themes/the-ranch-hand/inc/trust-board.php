@@ -360,7 +360,8 @@ function trh_trust_board_assets() {
 }
 
 /**
- * Render the header pill. Silent for anyone who is not a signed-in Hand.
+ * Render the account badge: the Hand's own face, their Trust Score, and the
+ * menu behind it. Silent for anyone who is not a signed-in Hand.
  *
  * The markup prints the *true* score, and the inline primer below rewinds it to
  * the watermark before the browser paints, so the animation starts from the old
@@ -372,24 +373,47 @@ function trh_trust_board() {
 		return;
 	}
 
-	$score   = trh_trust_score( $profile );
-	$seen    = trh_trust_seen( get_current_user_id(), $score );
-	$pending = max( 0, $score - $seen );
+	$score    = trh_trust_score( $profile );
+	$seen     = trh_trust_seen( get_current_user_id(), $score );
+	$pending  = max( 0, $score - $seen );
+	$name     = trh_hand_name( $profile );
+	$username = trh_hand_field( $profile, 'username' );
 	?>
-	<a class="trust-board" id="trh-trust-board" href="<?php echo esc_url( trh_dashboard_url() . '#trust-score' ); ?>"
-		data-score="<?php echo esc_attr( $score ); ?>" data-pending="<?php echo esc_attr( $pending ); ?>"
-		aria-label="<?php echo esc_attr( sprintf( 'Trust Score: %d points. See your breakdown.', $score ) ); ?>">
-		<span class="trust-board-icon" aria-hidden="true">
-			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-				<path d="M12 2.5 4.5 5.5v6c0 4.6 3.2 8.6 7.5 10 4.3-1.4 7.5-5.4 7.5-10v-6L12 2.5Z" />
-				<path d="m8.75 11.75 2.25 2.25 4.25-4.5" />
-			</svg>
-		</span>
-		<span class="trust-board-num" data-trust-num><?php echo esc_html( $score ); ?></span>
-		<span class="trust-board-cap">Trust</span>
-		<span class="trust-board-pop" data-trust-pop aria-hidden="true"></span>
-		<span class="trust-board-live" data-trust-live role="status" aria-live="polite"></span>
-	</a>
+	<div class="account" id="trh-account" data-account>
+		<button type="button" class="trust-board" id="trh-trust-board"
+			data-score="<?php echo esc_attr( $score ); ?>" data-pending="<?php echo esc_attr( $pending ); ?>"
+			aria-haspopup="true" aria-expanded="false" aria-controls="trh-account-menu"
+			aria-label="<?php echo esc_attr( sprintf( '%s, Trust Score %d points. Open your account menu.', $name, $score ) ); ?>">
+			<?php trh_hand_avatar( $profile, 'trust-board-avatar' ); ?>
+			<span class="trust-board-num" data-trust-num><?php echo esc_html( $score ); ?></span>
+			<span class="trust-board-cap">Trust</span>
+			<span class="trust-board-pop" data-trust-pop aria-hidden="true"></span>
+			<span class="trust-board-live" data-trust-live role="status" aria-live="polite"></span>
+		</button>
+
+		<div class="account-menu" id="trh-account-menu" data-account-menu hidden>
+			<div class="account-head">
+				<?php trh_hand_avatar( $profile, 'account-avatar', 'medium' ); ?>
+				<span class="account-id">
+					<span class="account-name"><?php echo esc_html( $name ); ?></span>
+					<?php if ( $username ) : ?>
+						<span class="account-user">@<?php echo esc_html( $username ); ?></span>
+					<?php endif; ?>
+				</span>
+			</div>
+
+			<a class="account-score" href="<?php echo esc_url( trh_dashboard_url() . '#trust-score' ); ?>">
+				<span>Trust Score</span>
+				<strong data-trust-menu-num><?php echo esc_html( $score ); ?></strong>
+			</a>
+
+			<nav class="account-links" aria-label="Account">
+				<a href="<?php echo esc_url( trh_page_url( 'my-profile' ) ); ?>">My Profile</a>
+				<a href="<?php echo esc_url( trh_dashboard_url() ); ?>">Dashboard</a>
+				<a class="account-signout" href="<?php echo esc_url( trh_hand_logout_url() ); ?>">Sign out</a>
+			</nav>
+		</div>
+	</div>
 	<?php
 	// Runs during parse, before first paint: rewind the number to the last one
 	// the Hand saw so the count-up in trust-board.js has somewhere to start.

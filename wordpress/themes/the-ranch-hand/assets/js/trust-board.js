@@ -22,7 +22,13 @@
 	var numEl = board.querySelector('[data-trust-num]');
 	var popEl = board.querySelector('[data-trust-pop]');
 	var liveEl = board.querySelector('[data-trust-live]');
+	var menuNumEl = document.querySelector('[data-trust-menu-num]');
 	if (!numEl || !popEl) return;
+
+	function paint(value) {
+		numEl.textContent = String(value);
+		if (menuNumEl) menuNumEl.textContent = String(value);
+	}
 
 	var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 	// wp_localize_script hands everything over as a string, so parse rather than
@@ -72,11 +78,11 @@
 			if (start === null) start = now;
 			var t = Math.min(1, (now - start) / ms);
 			var eased = 1 - Math.pow(1 - t, 3);
-			numEl.textContent = String(Math.round(from + span * eased));
+			paint(Math.round(from + span * eased));
 			if (t < 1) {
 				requestAnimationFrame(frame);
 			} else {
-				numEl.textContent = String(to);
+				paint(to);
 				done();
 			}
 		}
@@ -84,36 +90,44 @@
 	}
 
 	/**
-	 * Show the old total, flash "+N", then count the total up to the new one.
+	 * Show the old total, flash the change, then count to the new one.
+	 *
+	 * Works in both directions: a Hand who unlinks a social account loses those
+	 * points, and seeing "-5" is the only thing that explains why the number
+	 * moved. A loss is styled down rather than celebrated.
 	 */
 	function celebrate(from, to, reason) {
-		if (busy || to <= from) return;
+		if (busy || to === from) return;
 		busy = true;
 
-		var gain = to - from;
-		numEl.textContent = String(from);
-		popEl.textContent = '+' + gain;
-		board.setAttribute('aria-label', 'Trust Score: ' + to + ' points. See your breakdown.');
+		var delta = to - from;
+		var loss = delta < 0;
+		paint(from);
+		popEl.textContent = (loss ? '' : '+') + delta;
+		popEl.classList.toggle('is-loss', loss);
+		board.setAttribute('aria-label', 'Trust Score: ' + to + ' points. Open your account menu.');
 		if (liveEl) {
 			liveEl.textContent = (reason ? reason + '. ' : '') +
-				'Trust Score up ' + gain + ' points, now ' + to + '.';
+				'Trust Score ' + (loss ? 'down ' + Math.abs(delta) : 'up ' + delta) +
+				' points, now ' + to + '.';
 		}
 
 		// Restart the float even if it is already mid-flight.
 		popEl.classList.remove('is-live');
 		void popEl.offsetWidth;
 		popEl.classList.add('is-live');
-		board.classList.add('is-rising');
+		board.classList.add(loss ? 'is-falling' : 'is-rising');
 
 		function settle() {
 			shown = to;
 			busy = false;
 			board.classList.remove('is-rising');
+			board.classList.remove('is-falling');
 			markSeen(to);
 		}
 
 		if (calm) {
-			numEl.textContent = String(to);
+			paint(to);
 			settle();
 		} else {
 			// Let the "+N" clear the pill before the number starts moving, so
@@ -134,11 +148,8 @@
 	function poll() {
 		if (stopped || busy || document.hidden) return;
 		api('trust').then(function (data) {
-			if (data && typeof data.score === 'number' && data.score > shown) {
+			if (data && typeof data.score === 'number' && data.score !== shown) {
 				celebrate(shown, data.score, data.reason);
-			} else if (data && typeof data.score === 'number') {
-				shown = data.score;
-				numEl.textContent = String(shown);
 			}
 		}).catch(function () { /* offline or a blip; the next tick tries again */ });
 	}
