@@ -21,6 +21,75 @@
 	});
 })();
 
+/* Header dropdowns ("Resources"): hover for a mouse, click for touch and keyboard. */
+(function () {
+	'use strict';
+	document.addEventListener('DOMContentLoaded', function () {
+		Array.prototype.forEach.call(document.querySelectorAll('[data-dropdown]'), function (dropdown) {
+			var button = dropdown.querySelector('button');
+			var menu = dropdown.querySelector('[data-dropdown-menu]');
+			if (!button || !menu) return;
+
+			var closeTimer = null;
+			var hover = window.matchMedia('(hover: hover)').matches;
+			// A click pins the menu open; until then a hover-opened menu closes on leave.
+			var pinned = false;
+
+			function open() {
+				clearTimeout(closeTimer);
+				menu.hidden = false;
+				button.setAttribute('aria-expanded', 'true');
+			}
+
+			function close() {
+				clearTimeout(closeTimer);
+				pinned = false;
+				menu.hidden = true;
+				button.setAttribute('aria-expanded', 'false');
+			}
+
+			if (hover) {
+				dropdown.addEventListener('mouseenter', open);
+				dropdown.addEventListener('mouseleave', function () {
+					if (pinned) return;
+					clearTimeout(closeTimer);
+					closeTimer = setTimeout(close, 220);
+				});
+			}
+
+			// The click that follows a hover-open pins it rather than shutting it.
+			button.addEventListener('click', function () {
+				if (menu.hidden || !pinned) { open(); pinned = true; } else { close(); }
+			});
+
+			// Arrow down from the button lands on the first link.
+			button.addEventListener('keydown', function (e) {
+				if (e.key === 'ArrowDown') {
+					e.preventDefault();
+					open();
+					var first = menu.querySelector('a');
+					if (first) first.focus();
+				}
+			});
+
+			dropdown.addEventListener('keydown', function (e) {
+				if (e.key === 'Escape' && !menu.hidden) {
+					close();
+					button.focus();
+				}
+			});
+
+			document.addEventListener('click', function (e) {
+				if (!menu.hidden && !dropdown.contains(e.target)) close();
+			});
+
+			dropdown.addEventListener('focusout', function (e) {
+				if (!dropdown.contains(e.relatedTarget)) close();
+			});
+		});
+	});
+})();
+
 /* The account menu behind the header badge. */
 (function () {
 	'use strict';

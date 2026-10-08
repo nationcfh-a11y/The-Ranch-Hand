@@ -19,6 +19,7 @@ $trh_acct_url  = trh_dashboard_url();
 $trh_acct_text = $trh_is_hand ? 'My Dashboard' : 'Sign In';
 $trh_app_nav   = 'app' === $trh_mode ? trh_app_nav_items() : array();
 $trh_bare      = 'signup' === $trh_mode;
+$trh_resources = 'site' === $trh_mode ? trh_resource_links() : array();
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -67,6 +68,17 @@ $trh_bare      = 'signup' === $trh_mode;
 						<a class="nav-link" href="<?php echo esc_url( $trh_ranch ); ?>">Register Your Ranch</a>
 						<a class="nav-link" href="<?php echo esc_url( home_url( '/become-a-caretaker/' ) ); ?>">Become A Hand</a>
 					<?php endif; ?>
+					<div class="nav-dropdown" data-dropdown>
+						<button class="nav-link nav-dropdown-toggle<?php echo trh_is_resource_page() ? ' is-active' : ''; ?>" type="button" aria-expanded="false" aria-controls="trh-resources-menu">
+							Resources
+							<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+						</button>
+						<div class="nav-dropdown-menu" id="trh-resources-menu" data-dropdown-menu hidden>
+							<?php foreach ( $trh_resources as $trh_item ) : ?>
+								<a class="nav-dropdown-link<?php echo trh_is_resource_page( $trh_item['slug'] ) ? ' is-active' : ''; ?>" href="<?php echo esc_url( $trh_item['url'] ); ?>"><?php echo esc_html( $trh_item['label'] ); ?></a>
+							<?php endforeach; ?>
+						</div>
+					</div>
 					<a class="btn btn-primary btn-sm" href="<?php echo esc_url( $trh_acct_url ); ?>"><?php echo esc_html( $trh_acct_text ); ?></a>
 				</div>
 			<?php endif; ?>
@@ -92,6 +104,10 @@ $trh_bare      = 'signup' === $trh_mode;
 				<?php else : ?>
 					<a class="nav-link" href="<?php echo esc_url( $trh_ranch ); ?>">Register Your Ranch</a>
 					<a class="nav-link" href="<?php echo esc_url( home_url( '/become-a-caretaker/' ) ); ?>">Become A Hand</a>
+					<span class="mobile-menu-label">Resources</span>
+					<?php foreach ( $trh_resources as $trh_item ) : ?>
+						<a class="nav-link nav-link-sub<?php echo trh_is_resource_page( $trh_item['slug'] ) ? ' is-active' : ''; ?>" href="<?php echo esc_url( $trh_item['url'] ); ?>"><?php echo esc_html( $trh_item['label'] ); ?></a>
+					<?php endforeach; ?>
 					<a class="btn btn-primary" style="margin-top:.5rem;" href="<?php echo esc_url( $trh_acct_url ); ?>"><?php echo esc_html( $trh_acct_text ); ?></a>
 				<?php endif; ?>
 			</div>

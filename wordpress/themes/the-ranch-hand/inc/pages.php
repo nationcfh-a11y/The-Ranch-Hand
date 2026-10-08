@@ -379,3 +379,138 @@ function trh_terms_content() {
 <p>Questions about these Terms can be sent through our <a href="{$contact}">contact page</a>.</p>
 HTML;
 }
+
+/**
+ * The "Resources" pages in the header: Our Mission, About Us, Blog.
+ *
+ * Our Mission and Blog are created if missing. About already exists on the
+ * live site as WordPress's stock sample page ("This is an example of a
+ * page..."), so it is renamed "About Us" and filled in, but only while it
+ * still holds that sample text; real copy written in wp-admin is never
+ * touched. The stock "Hello world!" post is moved back to draft so the new
+ * Blog does not open on it. Runs once; bump the key to re-run.
+ */
+add_action( 'after_setup_theme', 'trh_ensure_resource_pages_v1', 20 );
+function trh_ensure_resource_pages_v1() {
+	if ( get_option( 'trh_resource_pages_v1' ) ) {
+		return;
+	}
+
+	$pages = array(
+		'our-mission' => array( 'title' => 'Our Mission', 'content' => trh_mission_content() ),
+		'about'       => array( 'title' => 'About Us', 'content' => trh_about_content() ),
+		'blog'        => array( 'title' => 'Blog', 'content' => '' ), // page-blog.php renders it
+	);
+
+	foreach ( $pages as $slug => $page ) {
+		$existing = get_page_by_path( $slug, OBJECT, 'page' );
+
+		if ( ! $existing ) {
+			wp_insert_post(
+				array(
+					'post_type'      => 'page',
+					'post_status'    => 'publish',
+					'post_title'     => $page['title'],
+					'post_name'      => $slug,
+					'post_content'   => $page['content'],
+					'comment_status' => 'closed',
+					'ping_status'    => 'closed',
+				)
+			);
+			continue;
+		}
+
+		if ( 'about' === $slug && false !== strpos( $existing->post_content, 'This is an example of a page' ) ) {
+			wp_update_post(
+				array(
+					'ID'             => $existing->ID,
+					'post_status'    => 'publish',
+					'post_title'     => $page['title'],
+					'post_content'   => $page['content'],
+					'comment_status' => 'closed',
+				)
+			);
+		}
+	}
+
+	$hello = get_page_by_path( 'hello-world', OBJECT, 'post' );
+	if ( $hello && 'publish' === $hello->post_status ) {
+		wp_update_post( array( 'ID' => $hello->ID, 'post_status' => 'draft' ) );
+	}
+
+	update_option( 'trh_resource_pages_v1', 1 );
+}
+
+/** Our Mission copy. Editable afterwards in wp-admin → Pages. */
+function trh_mission_content() {
+	$hands = esc_url( home_url( '/become-a-caretaker/' ) );
+	$ranch = esc_url( home_url( '/ranch-signup/' ) );
+
+	return <<<HTML
+<p class="lead"><strong>When you can't be there, a Ranch Hand can.</strong></p>
+
+<p>Our mission is to make sure no horse, herd, or flock goes without good care, and that the people who know how to give it get the recognition and the work they deserve.</p>
+
+<h2>Why we exist</h2>
+<p>If you keep animals, you know the feeling. A wedding, a funeral, a work trip, a week of the flu, and suddenly the question is not whether you can go, but who will feed, water, turn out, and check on everything while you are gone. Asking a neighbor only goes so far. A dog sitter does not know how to spot colic, pull a calf, or handle a horse that does not want to be caught.</p>
+<p>At the same time, there are a lot of people who grew up in barns and on working ranches, who can read an animal at a glance, and who would gladly take on the work. They just have not had a good way to be found.</p>
+<p>The Ranch Hand brings those two groups together.</p>
+
+<h2>What we stand for</h2>
+<h3>Real experience over a nice profile</h3>
+<p>We ask Hands to show what they have actually done: the animals they have handled, the care they have given, and the people who will vouch for them. Our Trust Score rewards that proof, so the most complete and best-supported profiles rise to the top.</p>
+<h3>Honesty on both sides</h3>
+<p>Ranches tell Hands the truth about their animals, their property, and the job. Hands tell Ranches the truth about what they can and cannot do. Good arrangements start there.</p>
+<h3>The animals come first</h3>
+<p>Every decision we make about the site comes back to one question: does this help an animal get better care?</p>
+<h3>Respect for the work</h3>
+<p>Animal care is skilled, physical, often early-morning work. Hands set their own rates and their own schedules, and we want them paid fairly for it.</p>
+
+<h2>Where we are headed</h2>
+<p>We are starting with the basics: helping Ranches find experienced Hands nearby, and helping Hands build a profile that shows what they know. From there we are building job posts, reviews from real jobs, and the tools that make arranging care simple from start to finish.</p>
+
+<h2>Be part of it</h2>
+<p>Know your way around a barn? <a href="{$hands}">Become a Hand</a>. Need someone you can trust with your animals? <a href="{$ranch}">Register your ranch</a>.</p>
+HTML;
+}
+
+/** About Us copy. Editable afterwards in wp-admin → Pages. */
+function trh_about_content() {
+	$mission = esc_url( home_url( '/our-mission/' ) );
+	$contact = esc_url( home_url( '/contact/' ) );
+	$hands   = esc_url( home_url( '/become-a-caretaker/' ) );
+	$ranch   = esc_url( home_url( '/ranch-signup/' ) );
+
+	return <<<HTML
+<p class="lead"><strong>The Ranch Hand connects horse, livestock, and farm owners with experienced people who can care for their animals.</strong></p>
+
+<p>We built The Ranch Hand because finding someone you trust to look after a barn full of horses, a herd of cattle, or a mixed farm is hard, and it should not be. General pet-sitting sites are built for dogs and cats. Farm and ranch animals need people who know them.</p>
+
+<h2>Who we serve</h2>
+<h3>Ranches</h3>
+<p>Horse owners, cattle and small-livestock producers, hobby farms, and everyone in between. Whether you need someone for one weekend or a few days every week, you can <a href="{$ranch}">register your ranch</a>, tell us about your animals and what you need, and post the job.</p>
+<h3>Hands</h3>
+<p>Barn managers, ranch-raised folks, vet techs, retired horsemen and horsewomen, and anyone with real hands-on animal experience. Hands <a href="{$hands}">build a profile</a> in three short steps, set their own rates, and choose the work that fits their week.</p>
+
+<h2>How it works</h2>
+<ol>
+<li><strong>Hands build a profile</strong> with their experience, resume, references, and the animals and care they know. We review every profile before it goes live.</li>
+<li><strong>Each Hand earns a Trust Score</strong> based on how much proof is on their profile, so Ranches can see at a glance who has shown the most.</li>
+<li><strong>Ranches post what they need</strong> and connect with Hands nearby.</li>
+<li><strong>The Ranch and the Hand agree on the details</strong>, including dates, duties, and pay, directly with each other.</li>
+</ol>
+
+<h2>What makes us different</h2>
+<ul>
+<li><strong>Built only for farm and ranch animals.</strong> Horses, cattle, goats, sheep, pigs, poultry, and mixed farms. Nothing else.</li>
+<li><strong>Experience you can check.</strong> Our 54-item experience checklist covers everything from blanketing and hoof care to foal watch and medication, and Hands list references who can vouch for them.</li>
+<li><strong>Every profile reviewed.</strong> A person on our team looks at every Hand profile before it appears in the directory.</li>
+</ul>
+
+<h2>Our mission</h2>
+<p>When you can't be there, a Ranch Hand can. <a href="{$mission}">Read more about what we stand for.</a></p>
+
+<h2>Get in touch</h2>
+<p>Questions, ideas, or want to partner with us? <a href="{$contact}">Send us a note</a>. We read every message.</p>
+HTML;
+}

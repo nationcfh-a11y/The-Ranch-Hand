@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'TRH_VERSION', '1.3.0' );
+define( 'TRH_VERSION', '1.4.0' );
 
 require get_template_directory() . '/inc/cpt.php';
 require get_template_directory() . '/inc/seed.php';
@@ -305,6 +305,28 @@ function trh_money( $n ) {
 function trh_directory_url() {
 	$url = get_post_type_archive_link( 'caretaker' );
 	return $url ? $url : home_url( '/sitters/' );
+}
+
+/** The pages under "Resources" in the header, in display order. */
+function trh_resource_links() {
+	return array(
+		array( 'slug' => 'our-mission', 'label' => 'Our Mission', 'url' => trh_page_url( 'our-mission' ) ),
+		array( 'slug' => 'about', 'label' => 'About Us', 'url' => trh_page_url( 'about' ) ),
+		array( 'slug' => 'blog', 'label' => 'Blog', 'url' => trh_page_url( 'blog' ) ),
+	);
+}
+
+/** Is the visitor on one of the Resources pages (a blog post counts as Blog)? */
+function trh_is_resource_page( $slug = '' ) {
+	if ( 'blog' === $slug || '' === $slug ) {
+		if ( is_singular( 'post' ) || is_home() ) {
+			return true;
+		}
+	}
+	if ( '' === $slug ) {
+		return is_page( wp_list_pluck( trh_resource_links(), 'slug' ) );
+	}
+	return is_page( $slug );
 }
 
 /**
