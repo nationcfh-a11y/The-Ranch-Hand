@@ -68,7 +68,6 @@ $tiers = array(
 		<?php endif; ?>
 
 		<div class="text-center" style="max-width:40rem;margin:0 auto;">
-			<span class="badge badge-hay">📋 Post a Job</span>
 			<h1 class="display-xl mt-4">Pick a plan that fits your ranch.</h1>
 			<p class="lead mt-4">Post your job and unlock access to Ranch Hands on the platform. The higher the tier, the wider your reach and the more trusted the Hands you can hire.</p>
 		</div>
