@@ -232,7 +232,8 @@ function trh_handle_ranch_signup() {
 	wp_set_auth_cookie( $user_id, true );
 	do_action( 'wp_login', $user->user_login, $user );
 
-	// Compile the answers into a PDF and mirror to the sheet's "Ranch" tab.
+	// Compile every answer into a PDF, then mirror the ranch into the sheet's
+	// "New Ranch" tab, which links to that PDF.
 	$pdf_url = trh_store_ranch_pdf(
 		$user_id,
 		array(
@@ -240,7 +241,7 @@ function trh_handle_ranch_signup() {
 			'email'          => $v['email'],
 			'phone'          => $v['phone'],
 			'location'       => $v['location'],
-			'search_radius'  => '',
+			'username'       => $v['username'],
 			'farm_name'      => $v['farm_name'],
 			'acres'          => $v['acres'],
 			'animals'        => $animals,
@@ -252,29 +253,10 @@ function trh_handle_ranch_signup() {
 			'notes'          => $v['notes'],
 		)
 	);
-
-	trh_mirror_to_sheet(
-		'Ranch',
-		array(
-			'ID'             => (string) $user_id,
-			'Full Name'      => $v['name'],
-			'Email'          => $v['email'],
-			'Role'           => 'owner',
-			'Location'       => $v['location'],
-			'Phone'          => $v['phone'],
-			'Ranch Name'     => $v['farm_name'],
-			'Property Size'  => $v['acres'],
-			'Animals'        => $animals,
-			'Animal Details' => $v['animal_details'],
-			'Care Needed'    => $needs,
-			'How Often'      => $v['frequency'],
-			'Start'          => $v['start'],
-			'Looking For'    => $v['looking_for'],
-			'Notes'          => $v['notes'],
-			'Username'       => $v['username'],
-			'User Info'      => trh_sheet_link( $pdf_url, 'View Profile' ),
-		)
-	);
+	if ( $pdf_url ) {
+		update_user_meta( $user_id, 'trh_ranch_pdf_url', $pdf_url );
+	}
+	trh_mirror_ranch( $user_id );
 
 	// Notify the admin.
 	$lines = array(
@@ -299,4 +281,33 @@ function trh_handle_ranch_signup() {
 
 	wp_safe_redirect( add_query_arg( 'registered', '1', trh_ranch_home_url() ) );
 	exit;
+}
+
+/* -------------------------------------------------------------------------
+ * Google Sheet mirror ("New Ranch" tab)
+ *
+ * Like the "New Hand" tab: every answer lives in the profile PDF, so the sheet
+ * keeps only enough to find a ranch and open their PDF: ID (the WordPress user
+ * ID), Full Name, Username, and User Info (a link to the PDF). The Apps Script
+ * keys the row on ID. The tab's "Plan" column is filled in later, once the
+ * plan step exists.
+ * ---------------------------------------------------------------------- */
+
+/**
+ * The "New Ranch" row for a ranch account: identity columns plus a link to the PDF.
+ *
+ * @return array Column header => value.
+ */
+function trh_ranch_sheet_row( $user_id ) {
+	return array(
+		'ID'        => (string) (int) $user_id,
+		'Full Name' => (string) get_user_meta( $user_id, 'trh_name', true ),
+		'Username'  => (string) get_user_meta( $user_id, 'trh_username', true ),
+		'User Info' => trh_sheet_link( (string) get_user_meta( $user_id, 'trh_ranch_pdf_url', true ), 'View Profile' ),
+	);
+}
+
+/** Push the current state of a ranch account into the Sheet's "New Ranch" tab. */
+function trh_mirror_ranch( $user_id ) {
+	trh_mirror_to_sheet( 'New Ranch', trh_ranch_sheet_row( $user_id ) );
 }

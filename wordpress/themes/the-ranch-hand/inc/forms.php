@@ -226,6 +226,9 @@ function trh_store_ranch_pdf( $lead_id, $d ) {
 	if ( $get( 'location' ) ) {
 		$pdf->field( 'Location', $get( 'location' ) );
 	}
+	if ( $get( 'username' ) ) {
+		$pdf->field( 'Username', $get( 'username' ) );
+	}
 	if ( '' !== $get( 'search_radius' ) ) {
 		$pdf->field( 'A Hand can travel', $get( 'search_radius' ) . ' miles' );
 	}
@@ -272,6 +275,9 @@ function trh_store_ranch_pdf( $lead_id, $d ) {
 		return '';
 	}
 
+	// $lead_id is a trh_lead post for the old lead form, or a user ID for a
+	// ranch account; only a lead post can parent the attachment and hold meta.
+	$is_lead       = 'trh_lead' === get_post_type( $lead_id );
 	$attachment_id = wp_insert_attachment(
 		array(
 			'post_mime_type' => 'application/pdf',
@@ -279,7 +285,7 @@ function trh_store_ranch_pdf( $lead_id, $d ) {
 			'post_status'    => 'inherit',
 		),
 		$upload['file'],
-		$lead_id,
+		$is_lead ? $lead_id : 0,
 		true
 	);
 	if ( is_wp_error( $attachment_id ) ) {
@@ -289,7 +295,9 @@ function trh_store_ranch_pdf( $lead_id, $d ) {
 
 	require_once ABSPATH . 'wp-admin/includes/image.php';
 	wp_update_attachment_metadata( $attachment_id, wp_generate_attachment_metadata( $attachment_id, $upload['file'] ) );
-	update_post_meta( $lead_id, 'trh_ranch_pdf_id', $attachment_id );
+	if ( $is_lead ) {
+		update_post_meta( $lead_id, 'trh_ranch_pdf_id', $attachment_id );
+	}
 
 	return wp_get_attachment_url( $attachment_id );
 }

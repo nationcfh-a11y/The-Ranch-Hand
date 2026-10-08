@@ -66,7 +66,7 @@ function trh_sheet_link( $url, $label ) {
  * column an earlier step already filled. Fail-soft: any error is logged and
  * swallowed. The wp-admin record (Lead or Hand profile) is the source of truth.
  *
- * @param string $tab 'Ranch' or 'Hand'.
+ * @param string $tab Tab name, e.g. 'New Ranch' or 'New Hand'.
  * @param array  $row Column header => value.
  */
 function trh_mirror_to_sheet( $tab, $row ) {
