@@ -14,7 +14,6 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 $trh_mode      = trh_header_mode();
 $trh_is_hand   = is_user_logged_in() && (bool) trh_hand_profile_id();
-$trh_dir       = trh_directory_url();
 $trh_ranch     = trh_page_url( 'ranch-signup' );
 $trh_acct_url  = trh_dashboard_url();
 $trh_acct_text = $trh_is_hand ? 'My Dashboard' : 'Sign In';
@@ -68,8 +67,7 @@ $trh_bare      = 'signup' === $trh_mode;
 						<a class="nav-link" href="<?php echo esc_url( $trh_ranch ); ?>">Register Your Ranch</a>
 						<a class="nav-link" href="<?php echo esc_url( home_url( '/become-a-caretaker/' ) ); ?>">Become A Hand</a>
 					<?php endif; ?>
-					<a class="nav-link" href="<?php echo esc_url( $trh_acct_url ); ?>"><?php echo esc_html( $trh_acct_text ); ?></a>
-					<a class="btn btn-primary btn-sm" href="<?php echo esc_url( $trh_dir ); ?>">Find a Sitter</a>
+					<a class="btn btn-primary btn-sm" href="<?php echo esc_url( $trh_acct_url ); ?>"><?php echo esc_html( $trh_acct_text ); ?></a>
 				</div>
 			<?php endif; ?>
 
@@ -94,8 +92,7 @@ $trh_bare      = 'signup' === $trh_mode;
 				<?php else : ?>
 					<a class="nav-link" href="<?php echo esc_url( $trh_ranch ); ?>">Register Your Ranch</a>
 					<a class="nav-link" href="<?php echo esc_url( home_url( '/become-a-caretaker/' ) ); ?>">Become A Hand</a>
-					<a class="nav-link" href="<?php echo esc_url( $trh_acct_url ); ?>"><?php echo esc_html( $trh_acct_text ); ?></a>
-					<a class="btn btn-primary" style="margin-top:.5rem;" href="<?php echo esc_url( $trh_dir ); ?>">Find a Sitter</a>
+					<a class="btn btn-primary" style="margin-top:.5rem;" href="<?php echo esc_url( $trh_acct_url ); ?>"><?php echo esc_html( $trh_acct_text ); ?></a>
 				<?php endif; ?>
 			</div>
 		</div>

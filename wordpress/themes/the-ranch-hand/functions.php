@@ -154,7 +154,7 @@ function trh_opt( $key, $fallback = '' ) {
 /**
  * Where a signed-in Hand works.
  *
- * The marketing nav (Register Your Ranch, Find a Sitter) is aimed at owners and
+ * The marketing nav (Register Your Ranch, Become A Hand) is aimed at owners and
  * visitors. Once a Hand signs in they are inside their own tool, so the header
  * swaps to the places that are theirs. Add a destination here and it appears in
  * both the desktop header and the mobile menu.
